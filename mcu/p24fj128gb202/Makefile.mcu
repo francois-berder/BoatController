@@ -1,0 +1,4 @@
+DEVICE := 24FJ128GB202
+
+MCU_SRCS = mcu.c \
+           periph/gpio.c
