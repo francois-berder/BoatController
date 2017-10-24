@@ -1,0 +1,82 @@
+# Copyright 2017 Julian Ingram
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+include $(FRAMEWORK_ROOT_DIR)/boards/$(BOARD)/Makefile.board
+
+CC=xc16-gcc
+BIN2HEX := xc16-bin2hex
+RM := rm -rf
+MKDIR := mkdir -p
+APPDIR ?= $(realpath $(FRAMEWORK_ROOT_DIR)/apps/$(APP))
+BINDIR ?= bin
+BUILDDIR ?= build
+DEPDIR ?= $(BUILDDIR)/deps
+TARGET_ELF := $(BINDIR)/$(APP)_$(BOARD).elf
+TARGET := $(BINDIR)/$(APP)_$(BOARD).hex
+IDIRS :=  $(FRAMEWORK_ROOT_DIR)/mcu/include \
+		  $(FRAMEWORK_ROOT_DIR)/mcu/$(MCU) \
+		  $(FRAMEWORK_ROOT_DIR)/boards/$(BOARD)
+IDIRS := $(realpath $(IDIRS))
+CFLAGS += -Wall -Wextra -Werror
+release: CFLAGS += -O1
+debug: CFLAGS += -g
+CFLAGS += $(IDIRS:%=-I%/)
+CFLAGS += $(DEFINES:%=-D%)
+CFLAGS += -mcpu=$(DEVICE)
+LDFLAGS += -Wl,-Map,$(BINDIR)/output.map,--report-mem -T p$(DEVICE).gld
+DEPFLAGS = -MMD -MP -MF $(@:$(BUILDDIR)/%.o=$(DEPDIR)/%.d)
+RM_ON_CLEAN := $(TARGET) $(TARGET:%.elf=%_physical.elf) $(DEPDIR) $(BUILDDIR)
+RM_ON_CLEAN += $(TARGET:%.elf=%_pickit.hex) $(BINDIR)/output.map $(BINDIR)
+
+SRCS := $(addprefix mcu/$(MCU)/,$(MCU_SRCS))
+SRCS += $(addprefix boards/$(BOARD)/,$(BOARD_SRCS))
+SRCS += $(addprefix apps/$(APP)/,$(APP_SRCS))
+SRCS := $(filter %.c %.S %.s, $(SRCS))
+
+OBJS := $(SRCS:%.c=$(BUILDDIR)/%.o)
+OBJS := $(OBJS:%.S=$(BUILDDIR)/%.o)
+OBJS := $(OBJS:%.s=$(BUILDDIR)/%.o)
+DEPS := $(OBJS:$(BUILDDIR)/%.o=$(DEPDIR)/%.d)
+
+.PHONY: all
+all: $(TARGET)
+
+.PHONY: release
+release: all
+.PHONY: debug
+debug: all
+
+# link
+$(TARGET): $(OBJS)
+	@$(MKDIR) $(BINDIR)
+	$(CC) -o  $(TARGET_ELF) $^ $(LDFLAGS)
+	$(BIN2HEX) $(TARGET_ELF)
+
+# compile and/or generate dep files
+$(BUILDDIR)/%.o: $(FRAMEWORK_ROOT_DIR)/%.c
+	@$(MKDIR) $(BUILDDIR)/$(subst $(FRAMEWORK_ROOT_DIR)/,,$(<D))
+	@$(MKDIR) $(DEPDIR)/$(subst $(FRAMEWORK_ROOT_DIR)/,,$(<D))
+	$(CC) $(DEPFLAGS) $(CFLAGS) -c $(realpath $<) -o $@
+
+$(BUILDDIR)/%.o: $(FRAMEWORK_ROOT_DIR)/%.S
+	@$(MKDIR) $(BUILDDIR)/$(subst $(FRAMEWORK_ROOT_DIR)/,,$(<D))
+	@$(MKDIR) $(DEPDIR)/$(subst $(FRAMEWORK_ROOT_DIR)/,,$(<D))
+	$(CC) $(DEPFLAGS) $(CFLAGS) -c $(realpath $<) -o $@
+
+.PHONY: clean
+clean:
+	$(RM) $(RM_ON_CLEAN)
+
+-include $(DEPS)
