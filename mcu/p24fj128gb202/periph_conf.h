@@ -26,4 +26,10 @@ enum PIC24_PORT {
     PORT_COUNT
 };
 
+enum PIC24_UART {
+    UART_1,
+    UART_2,
+    UART_COUNT
+};
+
 #endif
