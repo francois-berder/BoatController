@@ -19,6 +19,8 @@
 
 #include <xc.h>
 #include "mcu.h"
+#include "periph/timer1.h"
+
 
 static uint32_t system_clock;
 
@@ -39,11 +41,11 @@ uint16_t mcu_get_id(void)
     return *devid;
 }
 
-void mcu_delay(uint32_t ns)
+void mcu_delay(uint32_t ticks)
 {
-    (void)ns;
-
-    /* @todo Not yet implemented */
+    uint32_t now = timer1_get_tick_count();
+    while (timer1_get_tick_count() - now < ticks)
+        ;
 }
 
 void mcu_reset(void)
