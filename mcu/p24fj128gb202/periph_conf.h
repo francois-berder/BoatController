@@ -45,7 +45,8 @@ enum PIC24_TIMER {
     TIMER_2,
     TIMER_3,
     TIMER_4,
-    TIMER_5
+    TIMER_5,
+    TIMER_COUNT
 };
 
 enum PIC24_TIMER2_PRESCALER {
