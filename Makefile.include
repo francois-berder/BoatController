@@ -51,12 +51,12 @@ OBJS := $(OBJS:%.s=$(BUILDDIR)/%.o)
 DEPS := $(OBJS:$(BUILDDIR)/%.o=$(DEPDIR)/%.d)
 
 .PHONY: all
-all: $(TARGET)
+all: release
 
 .PHONY: release
-release: all
+release: $(TARGET)
 .PHONY: debug
-debug: all
+debug: $(TARGET)
 
 # link
 $(TARGET): $(OBJS)
