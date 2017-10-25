@@ -17,26 +17,40 @@
  * along with pic24-framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PERIPH_CONF_H__
-#define __PERIPH_CONF_H__
+#include <xc.h>
+#include "periph/timer1.h"
+#include "periph_conf.h"
 
-enum PIC24_PORT {
-    PORT_A,
-    PORT_B,
-    PORT_COUNT
-};
+volatile uint32_t ticks;
 
-enum PIC24_UART {
-    UART_1,
-    UART_2,
-    UART_COUNT
-};
+void __attribute__((__interrupt__, __auto_psv__)) _T1Interrupt(void)
+{
+    ++ticks;
+    IFS0 &= ~_IFS0_T1IF_MASK;
+}
 
-enum PIC24_TIMER1_PRESCALER {
-    TIMER1_PRESCALER_1,
-    TIMER1_PRESCALER_8,
-    TIMER1_PRESCALER_64,
-    TIMER1_PRESCALER_256
-};
+void timer1_configure(uint8_t prescaler, uint16_t period)
+{
+    T1CON = (prescaler << _T1CON_TCKPS_POSITION) & _T1CON_TCKPS_MASK;
+    PR1 = period;
+    TMR1 = 0;
+    ticks = 0;
+}
 
-#endif
+void timer1_start(void)
+{
+    IFS0 &= ~_IFS0_T1IF_MASK;
+    IEC0 |= _IEC0_T1IE_MASK;
+    T1CON |= _T1CON_TON_MASK;
+}
+
+void timer1_stop(void)
+{
+    T1CON &= ~_T1CON_TON_MASK;
+    IEC0 &= ~_IEC0_T1IE_MASK;
+}
+
+uint32_t timer1_get_tick_count(void)
+{
+    return ticks;
+}
