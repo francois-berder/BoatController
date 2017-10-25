@@ -65,9 +65,9 @@ uint16_t mcu_get_id(void);
  *
  * Note: Do not use it for precise timing
  *
- * @param[in] ns Number of nanoseconds to wait
+ * @param[in] ticks Number of ticks to wait
  */
-void mcu_delay(uint32_t ns);
+void mcu_delay(uint32_t ticks);
 
 /**
  * @brief Perform a soft reset of the MCU.
