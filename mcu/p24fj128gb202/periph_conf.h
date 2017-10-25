@@ -74,4 +74,11 @@ enum PIC24_TIMER5_PRESCALER {
     TIMER5_PRESCALER_256
 };
 
+enum PIC24_SPI {
+    SPI_1,
+    SPI_2,
+    SPI_3,
+    SPI_COUNT
+};
+
 #endif
