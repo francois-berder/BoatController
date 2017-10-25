@@ -22,6 +22,19 @@
 #include "periph/uart.h"
 #include "periph_conf.h"
 
+#define UxMODE(U)       (base_address[U][0x0 / 0x2])
+#define UxSTA(U)        (base_address[U][0x2 / 0x2])
+#define UxTXREG(U)      (base_address[U][0x4 / 0x2])
+#define UxRXREG(U)      (base_address[U][0x6 / 0x2])
+#define UxBRG(U)        (base_address[U][0x8 / 0x2])
+
+static volatile uint16_t *base_address[UART_COUNT] = {
+    &U1MODE,
+    &U2MODE,
+    &U3MODE,
+    &U4MODE
+};
+
 /**
  * @brief Compute UxBRG and set BRGH if needed.
  *
@@ -71,23 +84,11 @@ static int compute_divisor(unsigned int uart_num, uint32_t baudrate)
     }
 
     /* Configure UART module */
-    switch (uart_num) {
-    case UART_1:
-        if (use_brgh) {
-            U1MODE |= _U1MODE_BRGH_MASK;
-            U1BRG = divisor1;
-        } else {
-            U1BRG = divisor0;
-        }
-        break;
-    case UART_2:
-        if (use_brgh) {
-            U2MODE |= _U2MODE_BRGH_MASK;
-            U2BRG = divisor1;
-        } else {
-            U2BRG = divisor0;
-        }
-        break;
+    if (use_brgh) {
+        UxMODE(uart_num) |= _U1MODE_BRGH_MASK;
+        UxBRG(uart_num) = divisor1;
+    } else {
+        UxBRG(uart_num) = divisor0;
     }
 
     return 0;
@@ -95,46 +96,21 @@ static int compute_divisor(unsigned int uart_num, uint32_t baudrate)
 
 int uart_configure(unsigned int uart_num, uint32_t baudrate)
 {
-    switch (uart_num) {
-    case UART_1:
-        U1MODE = 0;
-        U1STA = 0;
-        break;
-    case UART_2:
-        U2MODE = 0;
-        U2STA = 0;
-        break;
-    }
-
+    UxMODE(uart_num) = 0;
+    UxSTA(uart_num) = 0;
     return compute_divisor(uart_num, baudrate);
 }
 
 void uart_enable(unsigned int uart_num)
 {
-    switch (uart_num) {
-    case UART_1:
-        U1MODE |= _U1MODE_UARTEN_MASK;
-        U1STA |= _U1STA_URXEN_MASK | _U1STA_UTXEN_MASK;
-        break;
-    case UART_2:
-        U2MODE |= _U2MODE_UARTEN_MASK;
-        U2STA |= _U2STA_URXEN_MASK | _U2STA_UTXEN_MASK;
-        break;
-    }
+    UxMODE(uart_num) |= _U1MODE_UARTEN_MASK;
+    UxSTA(uart_num) |= _U1STA_URXEN_MASK | _U1STA_UTXEN_MASK;
 }
 
 void uart_disable(unsigned int uart_num)
 {
-    switch (uart_num) {
-    case UART_1:
-        U1MODE &= ~_U1MODE_UARTEN_MASK;
-        U1STA &= ~(_U1STA_URXEN_MASK | _U1STA_UTXEN_MASK);
-        break;
-    case UART_2:
-        U2MODE &= ~_U2MODE_UARTEN_MASK;
-        U2STA &= ~(_U2STA_URXEN_MASK | _U2STA_UTXEN_MASK);
-        break;
-    }
+    UxMODE(uart_num) &= ~_U1MODE_UARTEN_MASK;
+    UxSTA(uart_num) &= ~(_U1STA_URXEN_MASK | _U1STA_UTXEN_MASK);
 }
 
 void uart_write(unsigned int uart_num, const void *buffer, uint32_t length)
@@ -143,21 +119,10 @@ void uart_write(unsigned int uart_num, const void *buffer, uint32_t length)
     const uint8_t *end = data + length;
 
     while (data != end) {
-        switch (uart_num) {
-        case UART_1:
-            /* Wait until there is some space in TX FIFO */
-            while (U1STA & _U1STA_UTXBF_MASK)
-                ;
-            U1TXREG = *data++;
-            break;
-
-        case UART_2:
-            /* Wait until there is some space in TX FIFO */
-            while (U2STA & _U2STA_UTXBF_MASK)
-                ;
-            U2TXREG = *data++;
-            break;
-        }
+        /* Wait until there is some space in TX FIFO */
+        while (UxSTA(uart_num) & _U1STA_UTXBF_MASK)
+            ;
+        UxTXREG(uart_num) = *data++;
     }
 }
 
@@ -167,18 +132,9 @@ void uart_read(unsigned int uart_num, void *buffer, uint32_t length)
     uint8_t *end = data + length;
 
     while (data != end) {
-        switch (uart_num) {
-        case UART_1:
-            while (!(U1STA & _U1STA_URXDA_MASK))
-                ;
-            *data++ = U1RXREG;
-            break;
-        case UART_2:
-            while (!(U2STA & _U2STA_URXDA_MASK))
-                ;
-            *data++ = U2RXREG;
-            break;
-        }
+        while (!(UxSTA(uart_num) & _U1STA_URXDA_MASK))
+            ;
+        *data++ = UxRXREG(uart_num);
     }
 }
 
@@ -191,6 +147,12 @@ void uart_power_up(unsigned int uart_num)
     case UART_2:
         PMD1 &= ~_PMD1_U2MD_MASK;
         break;
+    case UART_3:
+        PMD3 &= ~_PMD3_U3MD_MASK;
+        break;
+    case UART_4:
+        PMD4 &= ~_PMD4_U4MD_MASK;
+        break;
     }
 }
 
@@ -202,6 +164,12 @@ void uart_power_down(unsigned int uart_num)
         break;
     case UART_2:
         PMD1 |= _PMD1_U2MD_MASK;
+        break;
+    case UART_3:
+        PMD3 |= _PMD3_U3MD_MASK;
+        break;
+    case UART_4:
+        PMD4 |= _PMD4_U4MD_MASK;
         break;
     }
 }
