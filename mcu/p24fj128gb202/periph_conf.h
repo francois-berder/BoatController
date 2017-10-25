@@ -84,4 +84,10 @@ enum PIC24_SPI {
     SPI_COUNT
 };
 
+enum PIC24_I2C {
+    I2C_1,
+    I2C_2,
+    I2C_COUNT
+};
+
 #endif
