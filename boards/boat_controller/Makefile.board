@@ -1,0 +1,3 @@
+MCU := p24fj128gb202
+
+include $(FRAMEWORK_ROOT_DIR)/mcu/$(MCU)/Makefile.mcu
