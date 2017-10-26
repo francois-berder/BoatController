@@ -59,11 +59,11 @@ void gpio_init_in(uint8_t pin)
 
     switch (port) {
     case PORT_A:
-        ANSA |= mask;
+        ANSA &= ~mask;
         TRISA |= mask;
         break;
     case PORT_B:
-        ANSB |= mask;
+        ANSB &= ~mask;
         TRISB |= mask;
         break;
     }
