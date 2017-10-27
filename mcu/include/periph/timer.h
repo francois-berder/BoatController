@@ -46,4 +46,18 @@ void timer_start(unsigned int timer_num);
  */
 void timer_stop(unsigned int timer_num);
 
+/**
+ * @brief Power down a timer
+ *
+ * @param[in] timer_num
+ */
+void timer_power_up(unsigned int timer_num);
+
+/**
+ * @brief Power down a timer
+ *
+ * @param[in] timer_num
+ */
+void timer_power_down(unsigned int timer_num);
+
 #endif
