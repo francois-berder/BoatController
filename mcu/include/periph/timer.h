@@ -24,13 +24,23 @@
 #include <stdint.h>
 
 /**
+ * Timer callbacks that can be redefined by the user.
+ * The default implementation does not do anything.
+ */
+void timer2_callback(void);
+void timer3_callback(void);
+void timer4_callback(void);
+void timer5_callback(void);
+
+/**
  * @brief Configure a timer
  *
  * @param[in] timer_num
  * @param[in] prescaler
  * @param[in] period
+ * @param[in] enable_interrupt
  */
-void timer_configure(unsigned int timer_num, uint8_t prescaler, uint16_t period);
+void timer_configure(unsigned int timer_num, uint8_t prescaler, uint16_t period, uint8_t enable_interrupt);
 
 /**
  * @brief Start a timer
