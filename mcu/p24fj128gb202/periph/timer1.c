@@ -50,6 +50,16 @@ void timer1_stop(void)
     IEC0 &= ~_IEC0_T1IE_MASK;
 }
 
+void timer1_power_up(void)
+{
+    PMD1 &= ~_PMD1_T1MD_MASK;
+}
+
+void timer1_power_down(void)
+{
+    PMD1 |= _PMD1_T1MD_MASK;
+}
+
 uint32_t timer1_get_tick_count(void)
 {
     return ticks;
