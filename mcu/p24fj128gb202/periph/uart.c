@@ -28,7 +28,7 @@
 #define UxRXREG(U)      (base_address[U][0x6 / 0x2])
 #define UxBRG(U)        (base_address[U][0x8 / 0x2])
 
-static volatile uint16_t *base_address[UART_COUNT] = {
+static volatile uint16_t * const base_address[UART_COUNT] = {
     &U1MODE,
     &U2MODE,
     &U3MODE,

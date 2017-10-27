@@ -28,7 +28,7 @@
 #define SPIxBUFL(S)         (base_address[S][0xC / 0x2])
 #define SPIxBRGL(S)         (base_address[S][0x10 / 0x2])
 
-static volatile uint16_t *base_address[SPI_COUNT] = {
+static volatile uint16_t * const base_address[SPI_COUNT] = {
     &SPI1CON1L,
     &SPI2CON1L,
     &SPI3CON1L
