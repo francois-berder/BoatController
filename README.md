@@ -11,5 +11,6 @@ It contains abstraction for:
   - SPI
   - Hardware RNG
   - Input Capture
+  - Watchdog
 
 For now, only the PIC24F128GB202 is supported.
