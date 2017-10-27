@@ -8,4 +8,5 @@ MCU_SRCS = mcu.c \
            periph/spi.c \
            periph/timer.c \
            periph/timer1.c \
-           periph/uart.c
+           periph/uart.c \
+           periph/watchdog.c
