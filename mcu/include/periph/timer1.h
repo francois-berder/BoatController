@@ -41,6 +41,16 @@ void timer1_start(void);
 void timer1_stop(void);
 
 /**
+ * @brief Power up timer 1
+ */
+void timer1_power_up(void);
+
+/**
+ * @brief Power down timer 1
+ */
+void timer1_power_down(void);
+
+/**
  * @return Number of ticks
  */
 uint32_t timer1_get_tick_count(void);
