@@ -1,6 +1,7 @@
 DEVICE := 24FJ128GB202
 
 MCU_SRCS = mcu.c \
+           periph/crypto.c \
            periph/gpio.c \
            periph/i2c.c \
            periph/spi.c \
