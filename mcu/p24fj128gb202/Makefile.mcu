@@ -4,6 +4,7 @@ MCU_SRCS = mcu.c \
            periph/crypto.c \
            periph/gpio.c \
            periph/i2c.c \
+           periph/ic.c \
            periph/spi.c \
            periph/timer.c \
            periph/timer1.c \

@@ -90,4 +90,14 @@ enum PIC24_I2C {
     I2C_COUNT
 };
 
+enum PIC24_IC {
+    IC_1,
+    IC_2,
+    IC_3,
+    IC_4,
+    IC_5,
+    IC_6,
+    IC_COUNT
+};
+
 #endif
