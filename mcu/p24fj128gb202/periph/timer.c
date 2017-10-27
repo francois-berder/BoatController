@@ -82,3 +82,39 @@ void timer_stop(unsigned int timer_num)
         break;
     }
 }
+
+void timer_power_up(unsigned int timer_num)
+{
+    switch (timer_num) {
+    case TIMER_2:
+        PMD1 &= ~_PMD1_T2MD_MASK;
+        break;
+    case TIMER_3:
+        PMD1 &= ~_PMD1_T3MD_MASK;
+        break;
+    case TIMER_4:
+        PMD1 &= ~_PMD1_T4MD_MASK;
+        break;
+    case TIMER_5:
+        PMD1 &= ~_PMD1_T5MD_MASK;
+        break;
+    }
+}
+
+void timer_power_down(unsigned int timer_num)
+{
+    switch (timer_num) {
+    case TIMER_2:
+        PMD1 |= _PMD1_T2MD_MASK;
+        break;
+    case TIMER_3:
+        PMD1 |= _PMD1_T3MD_MASK;
+        break;
+    case TIMER_4:
+        PMD1 |= _PMD1_T4MD_MASK;
+        break;
+    case TIMER_5:
+        PMD1 |= _PMD1_T5MD_MASK;
+        break;
+    }
+}
