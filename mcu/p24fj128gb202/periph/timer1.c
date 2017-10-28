@@ -23,31 +23,46 @@
 
 volatile uint32_t ticks;
 
+void __attribute__((weak)) timer1_callback(void)
+{
+    /*
+     * Do not add your own code here !
+     *
+     * Redefine timer1_callback without the weak attribute
+     * and the linker will pick your function instead of
+     * this one.
+     */
+}
+
 void __attribute__((__interrupt__, __auto_psv__)) _T1Interrupt(void)
 {
     ++ticks;
+    timer1_callback();
     IFS0 &= ~_IFS0_T1IF_MASK;
 }
 
-void timer1_configure(uint8_t prescaler, uint16_t period)
+void timer1_configure(uint8_t prescaler, uint16_t period, uint8_t enable_interrupt)
 {
     T1CON = (prescaler << _T1CON_TCKPS_POSITION) & _T1CON_TCKPS_MASK;
     PR1 = period;
     TMR1 = 0;
     ticks = 0;
+
+    IFS0 &= ~_IFS0_T1IF_MASK;
+    if (enable_interrupt)
+        IEC0 |= _IEC0_T1IE_MASK;
+    else
+        IEC0 &= ~_IEC0_T1IE_MASK;
 }
 
 void timer1_start(void)
 {
-    IFS0 &= ~_IFS0_T1IF_MASK;
-    IEC0 |= _IEC0_T1IE_MASK;
     T1CON |= _T1CON_TON_MASK;
 }
 
 void timer1_stop(void)
 {
     T1CON &= ~_T1CON_TON_MASK;
-    IEC0 &= ~_IEC0_T1IE_MASK;
 }
 
 void timer1_power_up(void)
