@@ -23,6 +23,11 @@
 #include <stdint.h>
 
 /**
+ * @defgroup timer1 Timer 1 peripheral
+ * @{
+ */
+
+/**
  * @brief Timer 1 callback
  *
  * This function can be redefined by the user.
@@ -63,5 +68,7 @@ void timer1_power_down(void);
  * @return Number of ticks
  */
 uint32_t timer1_get_tick_count(void);
+
+/** @} */
 
 #endif

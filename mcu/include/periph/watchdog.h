@@ -21,6 +21,11 @@
 #define __MCU_WATCHDOG_H__
 
 /**
+ * @defgroup watchdog Watchdog Timer peripheral
+ * @{
+ */
+
+/**
  * @brief Enable the watchdog
  */
 void watchdog_enable(void);
@@ -34,5 +39,7 @@ void watchdog_disable(void);
  * @brief Kick the watchdog
  */
 void watchdog_kick(void);
+
+/** @} */
 
 #endif

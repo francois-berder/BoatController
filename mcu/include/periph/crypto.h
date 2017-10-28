@@ -23,6 +23,11 @@
 #include <stdint.h>
 
 /**
+ * @defgroup crypto Crypto peripheral
+ * @{
+ */
+
+/**
  * @brief Fill a buffer with random bytes
  *
  * @param[out] dst
@@ -49,5 +54,7 @@ void crypto_power_up(void);
  * @brief Power down crypto module
  */
 void crypto_power_down(void);
+
+/** @} */
 
 #endif

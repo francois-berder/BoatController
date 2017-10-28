@@ -22,6 +22,11 @@
 
 #include <stdint.h>
 
+/**
+ * @defgroup ic Input Capture peripheral
+ * @{
+ */
+
 enum IC_MODE {
     IC_EDGE_DETECT = 0b001,
     IC_FALLING_EDGE = 0b010,
@@ -91,5 +96,7 @@ void ic_power_up(unsigned int ic_num);
  * @param[in] ic_num
  */
 void ic_power_down(unsigned int ic_num);
+
+/** @} */
 
 #endif

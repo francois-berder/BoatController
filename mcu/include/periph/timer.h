@@ -24,6 +24,11 @@
 #include <stdint.h>
 
 /**
+ * @defgroup timer Timer peripheral
+ * @{
+ */
+
+/**
  * Timer callbacks that can be redefined by the user.
  * The default implementation does not do anything.
  */
@@ -69,5 +74,7 @@ void timer_power_up(unsigned int timer_num);
  * @param[in] timer_num
  */
 void timer_power_down(unsigned int timer_num);
+
+/** @} */
 
 #endif
