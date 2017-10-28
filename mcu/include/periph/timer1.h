@@ -23,12 +23,21 @@
 #include <stdint.h>
 
 /**
+ * @brief Timer 1 callback
+ *
+ * This function can be redefined by the user.
+ * The default implementation does nothing.
+ */
+void timer1_callback(void);
+
+/**
  * @brief Configure timer1
  *
  * @param[in] prescaler
  * @param[in] period
+ * @param[in] enable_interrupt
  */
-void timer1_configure(uint8_t prescaler, uint16_t period);
+void timer1_configure(uint8_t prescaler, uint16_t period, uint8_t enable_interrupt);
 
 /**
  * @brief Start timer 1
