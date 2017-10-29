@@ -18,6 +18,7 @@
  */
 
 #include <xc.h>
+#include "mcu.h"
 #include "periph/timer.h"
 #include "periph_conf.h"
 
@@ -163,6 +164,54 @@ void timer_stop(unsigned int timer_num)
         T5CON &= ~_T5CON_TON_MASK;
         break;
     }
+}
+
+uint32_t timer_get_period(unsigned int timer_num)
+{
+    uint64_t period = 0;
+    unsigned int prescaler = 0;
+
+    switch (timer_num) {
+    case TIMER_2:
+        prescaler = (T2CON & _T2CON_TCKPS_MASK) >> _T2CON_TCKPS_POSITION;
+        period = PR2;
+        break;
+    case TIMER_3:
+        prescaler = (T3CON & _T3CON_TCKPS_MASK) >> _T3CON_TCKPS_POSITION;
+        period = PR3;
+        break;
+    case TIMER_4:
+        prescaler = (T4CON & _T4CON_TCKPS_MASK) >> _T4CON_TCKPS_POSITION;
+        period = PR4;
+        break;
+    case TIMER_5:
+        prescaler = (T5CON & _T5CON_TCKPS_MASK) >> _T5CON_TCKPS_POSITION;
+        period = PR5;
+        break;
+    }
+
+    switch (prescaler) {
+    case TIMER2_PRESCALER_1:
+        break;
+    case TIMER2_PRESCALER_8:
+        period <<= 3;
+        break;
+    case TIMER2_PRESCALER_64:
+        period <<= 6;
+        break;
+    case TIMER2_PRESCALER_256:
+        period <<= 8;
+        break;
+    }
+
+    /* Convert period to nanoseconds */
+    period *= 1000;
+    period *= 1000;
+    period *= 1000;
+
+    period /= (mcu_get_system_clock() >> 1);
+
+    return period;
 }
 
 void timer_power_up(unsigned int timer_num)
