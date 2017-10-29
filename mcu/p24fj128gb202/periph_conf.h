@@ -100,4 +100,14 @@ enum PIC24_IC {
     IC_COUNT
 };
 
+enum PIC24_PWM {
+    PWM_1,
+    PWM_2,
+    PWM_3,
+    PWM_4,
+    PWM_5,
+    PWM_6,
+    PWM_COUNT
+};
+
 #endif
