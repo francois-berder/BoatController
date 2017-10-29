@@ -12,5 +12,6 @@ It contains abstraction for:
   - Hardware RNG
   - Input Capture
   - Watchdog
+  - PWM
 
 For now, only the PIC24F128GB202 is supported.
