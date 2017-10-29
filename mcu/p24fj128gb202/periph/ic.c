@@ -37,32 +37,68 @@ static enum IC_MODE mode[IC_COUNT];
 
 void __attribute__ ((weak)) ic1_callback(void)
 {
-
+    /*
+     * Do not add your own code here !
+     *
+     * Redefine ic1_callback without the weak attribute
+     * and the linker will pick your function instead of
+     * this one.
+     */
 }
 
 void __attribute__ ((weak)) ic2_callback(void)
 {
-
+    /*
+     * Do not add your own code here !
+     *
+     * Redefine ic2_callback without the weak attribute
+     * and the linker will pick your function instead of
+     * this one.
+     */
 }
 
 void __attribute__ ((weak)) ic3_callback(void)
 {
-
+    /*
+     * Do not add your own code here !
+     *
+     * Redefine ic3_callback without the weak attribute
+     * and the linker will pick your function instead of
+     * this one.
+     */
 }
 
 void __attribute__ ((weak)) ic4_callback(void)
 {
-
+    /*
+     * Do not add your own code here !
+     *
+     * Redefine ic4_callback without the weak attribute
+     * and the linker will pick your function instead of
+     * this one.
+     */
 }
 
 void __attribute__ ((weak)) ic5_callback(void)
 {
-
+    /*
+     * Do not add your own code here !
+     *
+     * Redefine ic5_callback without the weak attribute
+     * and the linker will pick your function instead of
+     * this one.
+     */
 }
 
 void __attribute__ ((weak)) ic6_callback(void)
 {
-
+    /*
+     * Do not add your own code here !
+     *
+     * Redefine ic6_callback without the weak attribute
+     * and the linker will pick your function instead of
+     * this one.
+     */
 }
 
 void __attribute__ ((interrupt, no_auto_psv)) _IC1Interrupt(void)
