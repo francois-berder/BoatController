@@ -30,6 +30,8 @@
 /**
  * @brief Fill a buffer with random bytes
  *
+ * The module must be powered up and enabled before calling this function.
+ *
  * @param[out] dst
  * @param[in] length Number of random bytes to generate
  */
@@ -52,6 +54,10 @@ void crypto_power_up(void);
 
 /**
  * @brief Power down crypto module
+ *
+ * The module must be disabled before calling this function.
+ * Do not call any functions except crypto_power_up after
+ * powering down the module.
  */
 void crypto_power_down(void);
 

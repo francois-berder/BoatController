@@ -104,6 +104,10 @@ void uart_power_up(unsigned int uart_num);
 /**
  * @brief Power-down a UART module
  *
+ * The module must be disabled before calling this function
+ * Once the module is powered down, do not call any functions
+ * except uart_power_up.
+ *
  * @param[in] uart_num Index of the UART module
  */
 void uart_power_down(unsigned int uart_num);

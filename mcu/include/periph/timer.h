@@ -40,6 +40,9 @@ void timer5_callback(void);
 /**
  * @brief Configure a timer
  *
+ * The timer module must be powered up before calling this function.
+ * This function does not enable the timer.
+ *
  * @param[in] timer_num
  * @param[in] prescaler
  * @param[in] period
@@ -62,7 +65,7 @@ void timer_start(unsigned int timer_num);
 void timer_stop(unsigned int timer_num);
 
 /**
- * @brief Power down a timer
+ * @brief Power up a timer
  *
  * @param[in] timer_num
  */
@@ -70,6 +73,10 @@ void timer_power_up(unsigned int timer_num);
 
 /**
  * @brief Power down a timer
+ *
+ * The module must be disabled before calling this function.
+ * Do not call any other functions except timer_power_up once
+ * the timer module is powered down.
  *
  * @param[in] timer_num
  */

@@ -38,6 +38,9 @@ void timer1_callback(void);
 /**
  * @brief Configure timer1
  *
+ * The timer1 must be powered up before calling this function.
+ * This function does not enable the timer 1.
+ *
  * @param[in] prescaler
  * @param[in] period
  * @param[in] enable_interrupt
@@ -61,6 +64,10 @@ void timer1_power_up(void);
 
 /**
  * @brief Power down timer 1
+ *
+ * The module must be disabled before calling this function.
+ * Once timer 1 is powered down, do not call any functions
+ * except timer1_power_up.
  */
 void timer1_power_down(void);
 

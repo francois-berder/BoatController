@@ -49,6 +49,10 @@ void ic6_callback(void);
 /**
  * @brief Configure an input capture module
  *
+ * This function does not enable the input capture module.
+ * The module must be powered up before calling this function (this is
+ * the case after any reset).
+ *
  * @param[in] ic_num
  * @param[in] mode
  * @param[in] enable_interrupt
@@ -92,6 +96,11 @@ void ic_power_up(unsigned int ic_num);
 
 /**
  * @brief Power down input capture module
+ *
+ * The module must be disabled before calling this function.
+ *
+ * Once the module is powered down, do not call any
+ * other functions except ic_power_up.
  *
  * @param[in] ic_num
  */

@@ -39,6 +39,9 @@ enum SPI_MODE {
 /**
  * @brief Configure a SPI module
  *
+ * The module must be powered up before calling this function.
+ * This function does not enable the SPI module.
+ *
  * @param[in] spi_num Index of the SPI module
  * @param[in] frequency Clock frequency in Hz
  * @param[in] mode SPI mode (see #SPI_MODE)
@@ -81,6 +84,10 @@ void spi_power_up(unsigned int spi_num);
 
 /**
  * @brief Power-down a SPI module
+ *
+ * The module must be disabled before calling this function.
+ * Once the module is powered down, do not call any other functions
+ * except spi_power_up.
  *
  * @param[in] spi_num Index of the SPI module
  */

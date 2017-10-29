@@ -36,6 +36,9 @@ enum I2C_SPEED {
 /**
  * @brief Initialise the I2C module
  *
+ * The module must be powered up before calling this function.
+ * This function does not enable the module.
+ *
  * @param[in] i2c_num Index of the I2C module
  * @param[in] speed Frequency in Hz of the I2C bus (must not be 0)
  * @retval 0 if the I2C module was initialised with success
@@ -94,6 +97,11 @@ void i2c_power_up(unsigned int i2c_num);
 
 /**
  * @brief Power-down a I2C module
+ *
+ * The module must be disabled before calling this function.
+ *
+ * Do not call any other functions except i2c_power_up after
+ * powering down the module.
  *
  * @param[in] i2c_num Index of the I2C module
  */
