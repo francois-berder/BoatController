@@ -1,6 +1,7 @@
 DEVICE := 24FJ128GB202
 
-MCU_SRCS = io.c \
+MCU_SRCS = core_timer.c \
+           io.c \
            mcu.c \
            periph/crypto.c \
            periph/gpio.c \

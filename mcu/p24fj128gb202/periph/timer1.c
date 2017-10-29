@@ -21,8 +21,6 @@
 #include "periph/timer1.h"
 #include "periph_conf.h"
 
-volatile uint32_t ticks;
-
 void __attribute__((weak)) timer1_callback(void)
 {
     /*
@@ -36,7 +34,6 @@ void __attribute__((weak)) timer1_callback(void)
 
 void __attribute__((__interrupt__, __auto_psv__)) _T1Interrupt(void)
 {
-    ++ticks;
     timer1_callback();
     IFS0 &= ~_IFS0_T1IF_MASK;
 }
@@ -46,7 +43,6 @@ void timer1_configure(uint8_t prescaler, uint16_t period, uint8_t enable_interru
     T1CON = (prescaler << _T1CON_TCKPS_POSITION) & _T1CON_TCKPS_MASK;
     PR1 = period;
     TMR1 = 0;
-    ticks = 0;
 
     IFS0 &= ~_IFS0_T1IF_MASK;
     if (enable_interrupt)
@@ -73,9 +69,4 @@ void timer1_power_up(void)
 void timer1_power_down(void)
 {
     PMD1 |= _PMD1_T1MD_MASK;
-}
-
-uint32_t timer1_get_tick_count(void)
-{
-    return ticks;
 }
