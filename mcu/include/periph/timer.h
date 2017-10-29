@@ -65,6 +65,14 @@ void timer_start(unsigned int timer_num);
 void timer_stop(unsigned int timer_num);
 
 /**
+ * @brief Get period in nanoseconds
+ *
+ * @param[in] timer_num
+ * @return timer period
+ */
+uint32_t timer_get_period(unsigned int timer_num);
+
+/**
  * @brief Power up a timer
  *
  * @param[in] timer_num
