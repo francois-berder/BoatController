@@ -27,23 +27,81 @@
  * @{
  */
 
+/**
+ * @brief Input Capture mode
+ */
 enum IC_MODE {
-    IC_EDGE_DETECT = 0b001,
-    IC_FALLING_EDGE = 0b010,
-    IC_RISING_EDGE = 0b011,
-    IC_FOURTH_RISING_EDGE = 0b100,
-    IC_SIXTEENTH_RISING_EDGE = 0b101
+    IC_EDGE_DETECT = 0b001,             /**< Capture occurs at every edge */
+    IC_FALLING_EDGE = 0b010,            /**< Capture occurs at every falling edge */
+    IC_RISING_EDGE = 0b011,             /**< Capture occurs at every rising edge */
+    IC_FOURTH_RISING_EDGE = 0b100,      /**< Capture occurs every 4th rising edge */
+    IC_SIXTEENTH_RISING_EDGE = 0b101    /**< Capture occurs every 16th rising edge */
 };
 
-/*
- * Input capture can be redefined by the user.
+/**
+ * @brief Input Capture 1 callback
+ *
+ * This function is called only if the input capture was
+ * enabled and configured with interrupts enabled.
+ *
+ * This function can be redefined by the user.
  * The default implementation does not do anything.
  */
 void ic1_callback(void);
+
+/**
+ * @brief Input Capture 2 callback
+ *
+ * This function is called only if the input capture was
+ * enabled and configured with interrupts enabled.
+ *
+ * This function can be redefined by the user.
+ * The default implementation does not do anything.
+ */
 void ic2_callback(void);
+
+/**
+ * @brief Input Capture 3 callback
+ *
+ * This function is called only if the input capture was
+ * enabled and configured with interrupts enabled.
+ *
+ * This function can be redefined by the user.
+ * The default implementation does not do anything.
+ */
 void ic3_callback(void);
+
+/**
+ * @brief Input Capture 4 callback
+ *
+ * This function is called only if the input capture was
+ * enabled and configured with interrupts enabled.
+ *
+ * This function can be redefined by the user.
+ * The default implementation does not do anything.
+ */
 void ic4_callback(void);
+
+/**
+ * @brief Input Capture 5 callback
+ *
+ * This function is called only if the input capture was
+ * enabled and configured with interrupts enabled.
+ *
+ * This function can be redefined by the user.
+ * The default implementation does not do anything.
+ */
 void ic5_callback(void);
+
+/**
+ * @brief Input Capture 6 callback
+ *
+ * This function is called only if the input capture was
+ * enabled and configured with interrupts enabled.
+ *
+ * This function can be redefined by the user.
+ * The default implementation does not do anything.
+ */
 void ic6_callback(void);
 
 /**
