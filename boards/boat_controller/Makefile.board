@@ -1,3 +1,4 @@
 MCU := p24fj128gb202
+DEFINES += IO_UART=UART_1
 
 include $(FRAMEWORK_ROOT_DIR)/mcu/$(MCU)/Makefile.mcu
