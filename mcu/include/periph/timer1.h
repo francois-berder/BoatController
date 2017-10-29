@@ -64,11 +64,6 @@ void timer1_power_up(void);
  */
 void timer1_power_down(void);
 
-/**
- * @return Number of ticks
- */
-uint32_t timer1_get_tick_count(void);
-
 /** @} */
 
 #endif
