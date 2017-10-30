@@ -75,6 +75,14 @@ void mcu_delay(uint32_t ticks)
         ;
 }
 
+void mcu_delay_sec(uint32_t secs)
+{
+    uint32_t i;
+
+    for (i = 0; i < secs; ++i)
+        mcu_delay(TICKS_PER_SEC);
+}
+
 void mcu_reset(void)
 {
     __asm__ __volatile__ ("reset");
