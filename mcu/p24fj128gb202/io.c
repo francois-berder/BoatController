@@ -20,6 +20,10 @@
 #include "periph/uart.h"
 #include "periph_conf.h"
 
+#ifndef IO_UART
+#define IO_UART UART_1
+#endif
+
 int __attribute__((__section__(".libc.write"))) write(int handle, void *buffer, unsigned int len)
 {
     switch (handle) {
