@@ -22,6 +22,10 @@
 
 #include <stdint.h>
 
+#ifndef TICKS_PER_SEC
+#define TICKS_PER_SEC 1000
+#endif
+
 /**
  * @brief Return the number of ticks
  *
