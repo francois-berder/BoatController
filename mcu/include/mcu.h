@@ -70,6 +70,15 @@ uint16_t mcu_get_id(void);
 void mcu_delay(uint32_t ticks);
 
 /**
+ * @brief Short busy loop
+ *
+ * Note: Do not use it for precise timing
+ *
+ * @param[in] secs Number of seconds to wait
+ */
+void mcu_delay_sec(uint32_t secs);
+
+/**
  * @brief Perform a soft reset of the MCU.
  */
 void mcu_reset(void);
