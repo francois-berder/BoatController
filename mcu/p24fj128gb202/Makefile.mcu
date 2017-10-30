@@ -8,6 +8,7 @@ MCU_SRCS = core_timer.c \
            periph/i2c.c \
            periph/ic.c \
            periph/pwm.c \
+           periph/rtc.c \
            periph/spi.c \
            periph/timer.c \
            periph/timer1.c \
