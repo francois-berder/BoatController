@@ -23,6 +23,34 @@
 
 static uint32_t system_clock;
 
+void __attribute__((interrupt, no_auto_psv, noreturn)) _OscillatorFail(void)
+{
+    INTCON1 &= ~_INTCON1_OSCFAIL_MASK;
+    while (1)
+        ;
+}
+
+void __attribute__((interrupt, no_auto_psv, noreturn)) _AddressError(void)
+{
+    INTCON1 &= ~_INTCON1_ADDRERR_MASK;
+    while (1)
+        ;
+}
+
+void __attribute__((interrupt, no_auto_psv, noreturn)) _StackError(void)
+{
+    INTCON1 &= ~_INTCON1_STKERR_MASK;
+    while (1)
+        ;
+}
+
+void __attribute__((interrupt, no_auto_psv, noreturn)) _MathError(void)
+{
+    INTCON1 &= ~_INTCON1_MATHERR_MASK;
+    while (1)
+        ;
+}
+
 void mcu_set_system_clock(uint32_t _system_clock)
 {
     system_clock = _system_clock;
