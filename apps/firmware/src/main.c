@@ -59,6 +59,7 @@
 #pragma config I2C1SEL = DISABLE
 #pragma config IOL1WAY = OFF
 
+#include <stdio.h>
 #include <xc.h>
 #include "mcu.h"
 #include "periph/gpio.h"
@@ -69,6 +70,7 @@
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
 
+const char *welcome_msg = "Boat Controller firmware\n";
 
 int main(void)
 {
@@ -84,6 +86,8 @@ int main(void)
     RPINR18 |= 0x000E;
     uart_configure(UART_1, UART_BD_9600);
     uart_enable(UART_1);
+
+    printf(welcome_msg);
 
     while (1) {
 
