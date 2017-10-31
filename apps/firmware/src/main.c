@@ -59,8 +59,13 @@
 #pragma config I2C1SEL = DISABLE
 #pragma config IOL1WAY = OFF
 
+#include "status.h"
+
 int main(void)
 {
+    status_configure();
+    status_set_mode(STATUS_FAST_BLINK);
+
     while (1) {
 
     }
