@@ -95,6 +95,10 @@ int main(void)
     radio_configure();
     printf("done\n");
 
+    printf("Initialisation finished\n");
+    printf("Starting main loop\n");
+    status_set_mode(STATUS_FLASH);
+
     while (1) {
 
     }
