@@ -65,6 +65,7 @@
 #include "periph/gpio.h"
 #include "periph/uart.h"
 #include "periph_conf.h"
+#include "radio.h"
 #include "status.h"
 
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
@@ -88,6 +89,11 @@ int main(void)
     uart_enable(UART_1);
 
     printf(welcome_msg);
+
+    /* Configure radio */
+    printf("Configuring radio...");
+    radio_configure();
+    printf("done\n");
 
     while (1) {
 
