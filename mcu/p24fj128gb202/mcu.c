@@ -61,6 +61,16 @@ uint32_t mcu_get_system_clock(void)
     return system_clock;
 }
 
+void mcu_enable_interrupts(void)
+{
+    SET_CPU_IPL(0);
+}
+
+void mcu_disable_interrupts(void)
+{
+    SET_CPU_IPL(7);
+}
+
 uint16_t mcu_get_id(void)
 {
     volatile uint16_t *devid = (volatile uint16_t *)0xFF0000;
