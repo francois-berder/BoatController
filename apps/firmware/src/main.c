@@ -59,8 +59,16 @@
 #pragma config I2C1SEL = DISABLE
 #pragma config IOL1WAY = OFF
 
+#include <xc.h>
 #include "mcu.h"
+#include "periph/gpio.h"
+#include "periph/uart.h"
+#include "periph_conf.h"
 #include "status.h"
+
+#define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
+#define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
+
 
 int main(void)
 {
@@ -68,6 +76,14 @@ int main(void)
 
     status_configure();
     status_set_mode(STATUS_FAST_BLINK);
+
+    /* Configure uart */
+    gpio_init_out(UART_TX_PIN, 1);
+    gpio_init_in(UART_RX_PIN);
+    RPOR7 |= 0x0300;
+    RPINR18 |= 0x000E;
+    uart_configure(UART_1, UART_BD_9600);
+    uart_enable(UART_1);
 
     while (1) {
 
