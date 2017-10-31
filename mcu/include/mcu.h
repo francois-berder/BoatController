@@ -56,6 +56,16 @@ void mcu_set_system_clock(uint32_t system_clock);
 uint32_t mcu_get_system_clock(void);
 
 /**
+ * @brief Enable interrupts
+ */
+void mcu_enable_interrupts(void);
+
+/**
+ * @brief Disable interrupts
+ */
+void mcu_disable_interrupts(void);
+
+/**
  * @return ID of the MCU
  */
 uint16_t mcu_get_id(void);
