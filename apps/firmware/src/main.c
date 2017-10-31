@@ -59,10 +59,13 @@
 #pragma config I2C1SEL = DISABLE
 #pragma config IOL1WAY = OFF
 
+#include "mcu.h"
 #include "status.h"
 
 int main(void)
 {
+    mcu_set_system_clock(8000000LU);
+
     status_configure();
     status_set_mode(STATUS_FAST_BLINK);
 
