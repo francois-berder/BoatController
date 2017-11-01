@@ -62,6 +62,7 @@
 #include <stdio.h>
 #include <xc.h>
 #include "mcu.h"
+#include "output.h"
 #include "periph/gpio.h"
 #include "periph/timer1.h"
 #include "periph/uart.h"
@@ -98,6 +99,11 @@ int main(void)
     /* Configure radio */
     printf("Configuring radio...");
     radio_configure();
+    printf("done\n");
+
+    /* Configure output module */
+    printf("Configuring output module...");
+    output_configure();
     printf("done\n");
 
     printf("Initialisation finished\n");
