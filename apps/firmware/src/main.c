@@ -63,6 +63,7 @@
 #include <xc.h>
 #include "mcu.h"
 #include "periph/gpio.h"
+#include "periph/timer1.h"
 #include "periph/uart.h"
 #include "periph_conf.h"
 #include "radio.h"
@@ -76,6 +77,10 @@ const char *welcome_msg = "Boat Controller firmware\n";
 int main(void)
 {
     mcu_set_system_clock(8000000LU);
+
+    /* Configure timer 1 to enable mcu_delay */
+    timer1_configure(TIMER1_PRESCALER_1, 4000, 1);
+    timer1_start();
 
     status_configure();
     status_set_mode(STATUS_FAST_BLINK);
