@@ -62,6 +62,7 @@
 #include <stdio.h>
 #include <xc.h>
 #include "mcu.h"
+#include "mpu6050.h"
 #include "output.h"
 #include "periph/gpio.h"
 #include "periph/timer1.h"
@@ -105,6 +106,13 @@ int main(void)
     printf("Configuring output module...");
     output_configure();
     printf("done\n");
+
+    /* Configure MPU6050 device */
+    printf("Configuring MPU6050 device...");
+    if (!mpu6050_init())
+        printf("done\n");
+    else
+        printf("failed\n");
 
     printf("Initialisation finished\n");
     printf("Starting main loop\n");
