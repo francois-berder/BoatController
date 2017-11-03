@@ -36,7 +36,7 @@ static volatile uint16_t * const base_address[SPI_COUNT] = {
 
 void spi_configure(unsigned int spi_num, uint32_t frequency, enum SPI_MODE mode)
 {
-    SPIxCON1L(spi_num) = _SPI1CON1L_MSTEN_MASK;
+    SPIxCON1L(spi_num) = _SPI1CON1L_MSTEN_MASK | _SPI1CON1L_ENHBUF_MASK;
 
     switch (mode) {
     case SPI_MODE_0:
@@ -98,6 +98,84 @@ void spi_transfer(unsigned int spi_num, const void *tx_buffer, void *rx_buffer, 
         }
 
         ++bytes_transfered_count;
+    }
+}
+
+void spi_fast_read(unsigned int spi_num, void *rx_buffer, uint32_t length)
+{
+    uint8_t *rx = (uint8_t*)rx_buffer;
+
+    while (length) {
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+        SPIxBUFL(spi_num) = 0xFF;
+
+        while (!(SPIxSTATL(spi_num) & _SPI1STATL_SPIRBF_MASK))
+            ;
+
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+        *rx++ = SPIxBUFL(spi_num);
+
+        length -= 32;
     }
 }
 
