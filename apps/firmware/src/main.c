@@ -69,6 +69,7 @@
 #include "periph/uart.h"
 #include "periph_conf.h"
 #include "radio.h"
+#include "sdcard.h"
 #include "status.h"
 
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
@@ -110,6 +111,13 @@ int main(void)
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
     if (!mpu6050_init())
+        printf("done\n");
+    else
+        printf("failed\n");
+
+    /* Configure SD card */
+    printf("Configuring SD card...");
+    if (!sdcard_init())
         printf("done\n");
     else
         printf("failed\n");
