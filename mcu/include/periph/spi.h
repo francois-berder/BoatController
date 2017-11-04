@@ -85,6 +85,15 @@ void spi_transfer(unsigned int spi_num, const void *tx_buffer, void *rx_buffer, 
 void spi_fast_read(unsigned int spi_num, void *rx_buffer, uint32_t length);
 
 /**
+ * @brief Make a fast read from SPI
+ *
+ * @param[in] spi_num Index of the SPI module
+ * @param[in] tx_buffer Array of bytes to send
+ * @param[in] length Number of bytes to receive/send, must be a multiple of 32
+ */
+void spi_fast_write(unsigned int spi_num, const void *tx_buffer, uint32_t length);
+
+/**
  * @brief Power-up a SPI module
  *
  * @param[in] spi_num Index of the SPI module
