@@ -179,6 +179,57 @@ void spi_fast_read(unsigned int spi_num, void *rx_buffer, uint32_t length)
     }
 }
 
+void spi_fast_write(unsigned int spi_num, const void *tx_buffer, uint32_t length)
+{
+    uint8_t *tx = (uint8_t*)tx_buffer;
+
+    while (length) {
+
+        while (!(SPIxSTATL(spi_num) & _SPI1STATL_SPITBE_MASK))
+            ;
+
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+        SPIxBUFL(spi_num) = *tx++;
+
+        length -= 32;
+    }
+
+    SPIxSTATL(spi_num) &= ~_SPI1STATL_SPIROV_MASK;
+    while (!(SPIxSTATL(spi_num) & _SPI1STATL_SPIRBE_MASK)) {
+        (void)SPIxBUFL(spi_num);
+    }
+}
+
 void spi_power_up(unsigned int spi_num)
 {
     switch (spi_num) {
