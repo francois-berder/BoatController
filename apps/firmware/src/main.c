@@ -92,6 +92,11 @@ int main(void)
 
     mcu_set_system_clock(8000000LU);
 
+    /* Configure unused I/O as output low */
+    gpio_init_out(GPIO_PIN(PORT_A, 0), 0);
+    gpio_init_out(GPIO_PIN(PORT_A, 1), 0);
+    gpio_init_out(GPIO_PIN(PORT_A, 4), 0);
+
     /* Configure timer 1 to enable mcu_delay */
     timer1_configure(TIMER1_PRESCALER_1, 4000, 1);
     timer1_start();
