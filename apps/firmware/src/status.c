@@ -36,14 +36,9 @@ void timer2_callback(void)
     case STATUS_ON:
         break;
     case STATUS_FLASH:
-        if (counter == 49 && !gpio_read(LED_PIN)) {
+        if (counter == 50)
             counter = 0;
-            gpio_write(LED_PIN, 1);
-        }
-        else if (counter == 1 && gpio_read(LED_PIN)) {
-            counter = 0;
-            gpio_write(LED_PIN, 0);
-        }
+        gpio_write(LED_PIN, counter == 0);
         break;
     case STATUS_FAST_BLINK:
         gpio_toggle(LED_PIN);
