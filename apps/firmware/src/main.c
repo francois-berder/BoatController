@@ -81,6 +81,9 @@ static const char *welcome_msg = "Boat Controller firmware\n";
 
 int main(void)
 {
+    unsigned int i;
+    struct partition_info_t p;
+
     mcu_set_system_clock(8000000LU);
 
     /* Configure timer 1 to enable mcu_delay */
@@ -131,6 +134,22 @@ int main(void)
     printf("Reading MBR...");
     mbr_read_partition_table();
     printf("done\n");
+
+    printf("Looking for a FAT16 partition...\n");
+    for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
+        p = mbr_get_partition_info(i);
+        if ((p.status == BOOTABLE_PARTITION || p.status == INACTIVE_PARTITION)
+        &&  p.type == FAT16_PARTITION_TYPE) {
+            uint32_t size_100kB = (10 * (p.size >> 10)) >> 10; /* size in 100kB unit */
+            printf("Found FAT16 partition at entry %u\n", i);
+            printf("\tstart_sector: %lu\n", p.start_sector);
+            printf("\tsize: %lu bytes (%lu.%lu MB)\n", p.size, size_100kB / 10, size_100kB % 10);
+            break;
+        }
+    }
+    if (i == PARTITION_ENTRY_COUNT) {
+        printf("Failed to found a FAT16 partition\n");
+    }
 
     printf("Initialisation finished\n");
     printf("Starting main loop\n");
