@@ -157,7 +157,7 @@ int main(void)
     if (config.sdcard_enabled) {
         printf("Configuring block storage...");
         block_storage_init();
-        printf("done");
+        printf("done\n");
 
         printf("Reading MBR...");
         mbr_read_partition_table();
