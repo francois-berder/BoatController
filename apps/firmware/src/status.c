@@ -80,7 +80,7 @@ void status_set_mode(enum STATUS_MODE _mode)
     case STATUS_FLASH:
     case STATUS_FAST_BLINK:
         counter = 0;
-        gpio_write(LED_PIN, 0);
+        gpio_write(LED_PIN, 1);
 
         /* Start timer 2 only if we need it */
         timer_start(TIMER_2);
