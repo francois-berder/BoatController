@@ -61,6 +61,7 @@
 
 #include <stdio.h>
 #include <xc.h>
+#include "block_storage.h"
 #include "mbr.h"
 #include "mcu.h"
 #include "mpu6050.h"
@@ -122,6 +123,10 @@ int main(void)
         printf("done\n");
     else
         printf("failed\n");
+
+    printf("Configuring block storage...");
+    block_storage_init();
+    printf("done");
 
     printf("Reading MBR...");
     mbr_read_partition_table();
