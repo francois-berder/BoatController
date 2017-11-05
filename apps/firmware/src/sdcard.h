@@ -22,6 +22,8 @@
 
 #include <stdint.h>
 
+#define SDCARD_BLOCK_LENGTH     (512LU)
+
 /**
  * @brief Initialise SD card
  *

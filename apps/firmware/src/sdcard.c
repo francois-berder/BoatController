@@ -30,7 +30,6 @@
 #define SCK_PIN             (GPIO_PIN(PORT_B, 6))
 #define CS_PIN              (GPIO_PIN(PORT_B, 7))
 
-#define BLOCK_LENGTH                    (512LU)
 #define CMD1_ATTEMPT_COUNT_MAX          (100)
 #define RESPONSE_ATTEMPT_COUNT_MAX      (128)
 #define DATA_START_TOKEN                (0xFE)
@@ -178,7 +177,7 @@ int sdcard_init(void)
         return -1;
 
     if (!is_sdhc) {
-        if (send_cmd(&response, CMD16_SET_BLOCKLEN, BLOCK_LENGTH, DUMMY_CRC) < 0
+        if (send_cmd(&response, CMD16_SET_BLOCKLEN, SDCARD_BLOCK_LENGTH, DUMMY_CRC) < 0
         ||  (response & SD_STATUS_ERROR))
             return -1;
     }
@@ -197,9 +196,9 @@ int sdcard_init(void)
     return 0;
 }
 
-uint32_t sdcard_get_block_length(void)
+uint32_t sdcard_get_SDCARD_BLOCK_LENGTH(void)
 {
-    return BLOCK_LENGTH;
+    return SDCARD_BLOCK_LENGTH;
 }
 
 int sdcard_read_block(void *block, uint32_t sector)
@@ -227,7 +226,7 @@ int sdcard_read_block(void *block, uint32_t sector)
         goto sdcard_read_block_end;
     }
 
-    spi_fast_read(SPI_1, block, BLOCK_LENGTH);
+    spi_fast_read(SPI_1, block, SDCARD_BLOCK_LENGTH);
 
     /* Discard CRC */
     spi_transfer(SPI_1, NULL, NULL, 2);
@@ -268,7 +267,7 @@ int sdcard_write_block(const void *block, uint32_t sector)
         spi_transfer(SPI_1, &token, NULL, 1);
     }
 
-    spi_fast_write(SPI_1, block, BLOCK_LENGTH);
+    spi_fast_write(SPI_1, block, SDCARD_BLOCK_LENGTH);
 
     /* Send dummy CRC */
     spi_transfer(SPI_1, NULL, NULL, 2);
