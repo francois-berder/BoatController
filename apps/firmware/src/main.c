@@ -174,7 +174,7 @@ int main(void)
             p = mbr_get_partition_info(i);
             if ((p.status == BOOTABLE_PARTITION || p.status == INACTIVE_PARTITION)
             &&  p.type == FAT16_PARTITION_TYPE) {
-                uint32_t size_100kB = (10 * (p.size >> 10)) >> 10; /* size in 100kB unit */
+                uint32_t size_100kB = p.size / 100000; /* size in 100kB unit */
                 printf("Found FAT16 partition at entry %u\n", i);
                 printf("\tstart_sector: %lu\n", p.start_sector);
                 printf("\tsize: %lu bytes (%lu.%lu MB)\n", p.size, size_100kB / 10, size_100kB % 10);
