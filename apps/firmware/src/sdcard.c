@@ -136,6 +136,7 @@ int sdcard_init(void)
     RPINR20bits.SDI1R = 0x0004;
     RPOR3bits.RP6R = 0x0008;
 
+    spi_power_up(SPI_1);
     spi_configure(SPI_1, 400000, SPI_MODE_0);
     spi_enable(SPI_1);
 
@@ -187,6 +188,7 @@ int sdcard_init(void)
      *  - Use system clock for SPI module
      *  - Set BRG to 0
      */
+    PMD4 &= ~_PMD4_REFOMD_MASK;
     REFOCONL = _REFOCONL_ROEN_MASK;
     spi_disable(SPI_1);
     SPI1BRGL = 0;

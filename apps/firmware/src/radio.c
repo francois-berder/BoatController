@@ -86,6 +86,8 @@ void radio_configure(void)
     gpio_init_in(RADIO_SPEED_PIN);
     RPINR7 = 0x0100;
 
+    ic_power_up(IC_1);
+    ic_power_up(IC_2);
     ic_configure(IC_1, IC_EDGE_DETECT, 1);
     ic_configure(IC_2, IC_EDGE_DETECT, 1);
 

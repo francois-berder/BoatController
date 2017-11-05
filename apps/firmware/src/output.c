@@ -68,8 +68,10 @@ void timer3_callback(void)
         break;
     }
 
-    if (state != FETCH_DATA)
+    if (state != FETCH_DATA) {
+        timer_power_up(TIMER_4);
         timer_start(TIMER_4);
+    }
 }
 
 void timer4_callback(void)
@@ -92,6 +94,7 @@ void timer4_callback(void)
     }
 
     timer_stop(TIMER_4);
+    timer_power_down(TIMER_4);
 }
 
 void output_configure(void)
@@ -114,6 +117,7 @@ void output_configure(void)
     gpio_init_out(RIGHT_MOTOR_PIN, 0);
 
     /* Configure timer 3 to call callback every 4 ms */
+    timer_power_up(TIMER_3);
     timer_configure(TIMER_3, TIMER3_PRESCALER_8, 2000, 1);
     timer_start(TIMER_3);
 }

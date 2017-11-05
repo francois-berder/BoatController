@@ -89,6 +89,7 @@ int mpu6050_init(void)
     gpio_init_out(SCL_PIN, 1);
     gpio_init_out(SDA_PIN, 1);
 
+    i2c_power_up(I2C_1);
     i2c_configure(I2C_1, I2C_FAST_SPEED);
     i2c_enable(I2C_1);
 

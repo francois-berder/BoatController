@@ -97,7 +97,18 @@ int main(void)
     gpio_init_out(GPIO_PIN(PORT_A, 1), 0);
     gpio_init_out(GPIO_PIN(PORT_A, 4), 0);
 
+    /* Power down all peripherals */
+    PMD1 = 0xFFFF;
+    PMD2 = 0xFFFF;
+    PMD3 = 0xFFFF;
+    PMD4 = 0xFFFF;
+    PMD5 = 0xFFFF;
+    PMD6 = 0xFFFF;
+    PMD7 = 0xFFFF;
+    PMD8 = 0xFFFF;
+
     /* Configure timer 1 to enable mcu_delay */
+    timer1_power_up();
     timer1_configure(TIMER1_PRESCALER_1, 4000, 1);
     timer1_start();
 
@@ -109,6 +120,7 @@ int main(void)
     gpio_init_in(UART_RX_PIN);
     RPOR7 |= 0x0300;
     RPINR18 |= 0x000E;
+    uart_power_up(UART_1);
     uart_configure(UART_1, UART_BD_9600);
     uart_enable(UART_1);
 

@@ -77,6 +77,7 @@ void status_configure(void)
     gpio_init_out(LED_PIN, 0);
 
     /* Configure timer2 to trigger every 100ms */
+    timer_power_up(TIMER_2);
     timer_configure(TIMER_2, TIMER2_PRESCALER_64, 6250, 1);
 }
 
