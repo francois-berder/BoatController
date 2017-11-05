@@ -82,7 +82,13 @@ struct board_config_t {
     uint8_t sdcard_enabled;
 };
 
-static const char *welcome_msg = "Boat Controller firmware\n";
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION "dev"
+#endif
+
+static const char *welcome_msg = "Boat Controller firmware " FIRMWARE_VERSION
+                                 " - " __DATE__ " " __TIME__
+                                 "\n";
 
 int main(void)
 {
