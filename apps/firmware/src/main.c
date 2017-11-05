@@ -61,6 +61,7 @@
 
 #include <stdio.h>
 #include <xc.h>
+#include "mbr.h"
 #include "mcu.h"
 #include "mpu6050.h"
 #include "output.h"
@@ -121,6 +122,10 @@ int main(void)
         printf("done\n");
     else
         printf("failed\n");
+
+    printf("Reading MBR...");
+    mbr_read_partition_table();
+    printf("done\n");
 
     printf("Initialisation finished\n");
     printf("Starting main loop\n");
