@@ -77,10 +77,16 @@
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
 
+struct board_config_t {
+    uint8_t mpu6050_enabled;
+    uint8_t sdcard_enabled;
+};
+
 static const char *welcome_msg = "Boat Controller firmware\n";
 
 int main(void)
 {
+    struct board_config_t config = {1, 1};
     unsigned int i;
     struct partition_info_t p;
 
@@ -115,45 +121,61 @@ int main(void)
 
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
-    if (!mpu6050_init())
+    if (!mpu6050_init()) {
         printf("done\n");
-    else
+    } else {
         printf("failed\n");
+        config.mpu6050_enabled = 0;
+    }
 
     /* Configure SD card */
     printf("Configuring SD card...");
     if (!sdcard_init())
         printf("done\n");
-    else
+    else {
         printf("failed\n");
-
-    printf("Configuring block storage...");
-    block_storage_init();
-    printf("done");
-
-    printf("Reading MBR...");
-    mbr_read_partition_table();
-    printf("done\n");
-
-    printf("Looking for a FAT16 partition...\n");
-    for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
-        p = mbr_get_partition_info(i);
-        if ((p.status == BOOTABLE_PARTITION || p.status == INACTIVE_PARTITION)
-        &&  p.type == FAT16_PARTITION_TYPE) {
-            uint32_t size_100kB = (10 * (p.size >> 10)) >> 10; /* size in 100kB unit */
-            printf("Found FAT16 partition at entry %u\n", i);
-            printf("\tstart_sector: %lu\n", p.start_sector);
-            printf("\tsize: %lu bytes (%lu.%lu MB)\n", p.size, size_100kB / 10, size_100kB % 10);
-            break;
-        }
+        config.sdcard_enabled = 0;
     }
-    if (i == PARTITION_ENTRY_COUNT) {
-        printf("Failed to found a FAT16 partition\n");
+
+    if (config.sdcard_enabled) {
+        printf("Configuring block storage...");
+        block_storage_init();
+        printf("done");
+
+        printf("Reading MBR...");
+        mbr_read_partition_table();
+        printf("done\n");
+
+        printf("Looking for a FAT16 partition...\n");
+        for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
+            p = mbr_get_partition_info(i);
+            if ((p.status == BOOTABLE_PARTITION || p.status == INACTIVE_PARTITION)
+            &&  p.type == FAT16_PARTITION_TYPE) {
+                uint32_t size_100kB = (10 * (p.size >> 10)) >> 10; /* size in 100kB unit */
+                printf("Found FAT16 partition at entry %u\n", i);
+                printf("\tstart_sector: %lu\n", p.start_sector);
+                printf("\tsize: %lu bytes (%lu.%lu MB)\n", p.size, size_100kB / 10, size_100kB % 10);
+                break;
+            }
+        }
+        if (i == PARTITION_ENTRY_COUNT) {
+            printf("Failed to found a FAT16 partition\n");
+            config.sdcard_enabled = 0;
+        }
     }
 
     printf("Initialisation finished\n");
     printf("Starting main loop\n");
-    status_set_mode(STATUS_FLASH);
+
+    /* Change status LED depending on MPU6050 and SD card initialisation */
+    if (config.mpu6050_enabled && config.sdcard_enabled)
+        status_set_mode(STATUS_FLASH);
+    else if (!config.mpu6050_enabled && config.sdcard_enabled)
+        status_set_mode(STATUS_ONE_PER_2SEC);
+    else if (config.mpu6050_enabled && !config.sdcard_enabled)
+        status_set_mode(STATUS_TWO_PER_2SEC);
+    else
+        status_set_mode(STATUS_THREE_PER_2SEC);
 
     while (1) {
 
