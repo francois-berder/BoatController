@@ -77,7 +77,7 @@
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
 
-const char *welcome_msg = "Boat Controller firmware\n";
+static const char *welcome_msg = "Boat Controller firmware\n";
 
 int main(void)
 {
