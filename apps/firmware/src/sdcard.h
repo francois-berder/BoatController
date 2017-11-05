@@ -32,11 +32,6 @@
 int sdcard_init(void);
 
 /**
- * @return Block length
- */
-uint32_t sdcard_get_block_length(void);
-
-/**
  * @brief Read block from sector
  *
  * @param[in] block Array of bytes at least greater or equal than block length

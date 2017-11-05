@@ -196,11 +196,6 @@ int sdcard_init(void)
     return 0;
 }
 
-uint32_t sdcard_get_SDCARD_BLOCK_LENGTH(void)
-{
-    return SDCARD_BLOCK_LENGTH;
-}
-
 int sdcard_read_block(void *block, uint32_t sector)
 {
     int ret = 0;
