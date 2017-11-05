@@ -29,7 +29,7 @@
 struct cache_entry_t {
     uint16_t status;            /**< [15..14]: valid & dirty flags, [0..13]: 14bit saturating counter */
     uint32_t sector;            /**< sector index */
-    uint8_t block[512];
+    uint8_t block[SDCARD_BLOCK_LENGTH];
 };
 static struct cache_entry_t cache[CACHE_ENTRY_COUNT];
 static uint32_t current_address;
@@ -101,8 +101,8 @@ void block_storage_read(void *buffer, uint32_t length)
 
     while (length) {
         unsigned int cache_index = load_block();
-        uint16_t offset = current_address & 511;
-        uint16_t len = 512 - offset;
+        uint16_t offset = current_address & (SDCARD_BLOCK_LENGTH - 1);
+        uint16_t len = SDCARD_BLOCK_LENGTH - offset;
         if (len > length)
             len = length;
 
@@ -125,8 +125,8 @@ void block_storage_write(const void *buffer, uint32_t length)
 
     while (length) {
         unsigned int cache_index = load_block();
-        uint16_t offset = current_address & 511;
-        uint16_t len = 512 - offset;
+        uint16_t offset = current_address & (SDCARD_BLOCK_LENGTH - 1);
+        uint16_t len = SDCARD_BLOCK_LENGTH - offset;
         if (len > length)
             len = length;
 
