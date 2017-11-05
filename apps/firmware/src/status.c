@@ -46,10 +46,7 @@ void timer2_callback(void)
         }
         break;
     case STATUS_FAST_BLINK:
-        if (counter == 1) {
-            counter = 0;
-            gpio_toggle(LED_PIN);
-        }
+        gpio_toggle(LED_PIN);
         break;
     case STATUS_ONE_PER_2SEC:
         gpio_write(LED_PIN, counter < 2);
