@@ -51,6 +51,30 @@ void timer2_callback(void)
             gpio_toggle(LED_PIN);
         }
         break;
+    case STATUS_ONE_PER_2SEC:
+        gpio_write(LED_PIN, counter < 2);
+        if (counter == 19)
+            counter = 0;
+        break;
+    case STATUS_TWO_PER_2SEC:
+        if (counter < 6 && counter != 2 && counter != 3)
+            gpio_write(LED_PIN, 1);
+        else
+            gpio_write(LED_PIN, 0);
+
+        if (counter == 19)
+            counter = 0;
+        break;
+    case STATUS_THREE_PER_2SEC:
+        if (counter < 10 && counter != 2 && counter != 3
+        && counter != 6 && counter != 7)
+            gpio_write(LED_PIN, 1);
+        else
+            gpio_write(LED_PIN, 0);
+
+        if (counter == 19)
+            counter = 0;
+        break;
     }
 }
 
@@ -79,6 +103,9 @@ void status_set_mode(enum STATUS_MODE _mode)
         break;
     case STATUS_FLASH:
     case STATUS_FAST_BLINK:
+    case STATUS_ONE_PER_2SEC:
+    case STATUS_TWO_PER_2SEC:
+    case STATUS_THREE_PER_2SEC:
         counter = 0;
         gpio_write(LED_PIN, 1);
 

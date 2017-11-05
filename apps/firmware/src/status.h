@@ -21,10 +21,13 @@
 #define __STATUS_H__
 
 enum STATUS_MODE {
-    STATUS_OFF,         /**< Always OFF */
-    STATUS_ON,          /**< Always ON */
-    STATUS_FLASH,       /**< ON: 100ms, OFF: 4.9s */
-    STATUS_FAST_BLINK   /**< ON: 100ms, OFF: 100ms */
+    STATUS_OFF,             /**< Always OFF */
+    STATUS_ON,              /**< Always ON */
+    STATUS_FLASH,           /**< ON: 100ms, OFF: 4.9s */
+    STATUS_FAST_BLINK,      /**< ON: 100ms, OFF: 100ms */
+    STATUS_ONE_PER_2SEC,    /**< 1 blink every 2 seconds */
+    STATUS_TWO_PER_2SEC,    /**< 2 blinks every 2 seconds */
+    STATUS_THREE_PER_2SEC,  /**< 3 blinks every 2 seconds */
 };
 
 /**
