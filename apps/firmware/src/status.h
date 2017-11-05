@@ -23,7 +23,7 @@
 enum STATUS_MODE {
     STATUS_OFF,         /**< Always OFF */
     STATUS_ON,          /**< Always ON */
-    STATUS_FLASH,       /**< ON: 100ms, OFF: 1.9s */
+    STATUS_FLASH,       /**< ON: 100ms, OFF: 4.9s */
     STATUS_FAST_BLINK   /**< ON: 100ms, OFF: 100ms */
 };
 
