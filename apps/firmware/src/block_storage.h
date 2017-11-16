@@ -37,14 +37,14 @@ void block_storage_init(void);
  * @param[out] buffer
  * @param[in] length Number of bytes to read
  */
-void block_storage_read(void *buffer, uint32_t length);
+int block_storage_read(void *buffer, uint32_t length);
 
 /**
  * @brief Read one byte from block storage at current address
  *
  * @param[in] data
  */
-void block_storage_read_byte(void *data);
+int block_storage_read_byte(void *data);
 
 /**
  * @brief Write bytes to block storage at current address
@@ -52,14 +52,14 @@ void block_storage_read_byte(void *data);
  * @param[in] buffer
  * @param[in] length Number of bytes to write
  */
-void block_storage_write(const void *buffer, uint32_t length);
+int block_storage_write(const void *buffer, uint32_t length);
 
 /**
  * @brief Set the current address
  *
  * @param[in] address
  */
-void block_storage_seek(uint32_t address);
+int block_storage_seek(uint32_t address);
 
 /**
  * @brief Flush all dirty blocks to the SD card

@@ -95,7 +95,7 @@ void block_storage_init(void)
     current_address = 0;
 }
 
-void block_storage_read(void *buffer, uint32_t length)
+int block_storage_read(void *buffer, uint32_t length)
 {
     uint8_t *data = (uint8_t *)buffer;
 
@@ -112,14 +112,17 @@ void block_storage_read(void *buffer, uint32_t length)
         data += len;
         current_address += len;
     }
+
+    return 0;
 }
 
-void block_storage_read_byte(void *data)
+int block_storage_read_byte(void *data)
 {
     block_storage_read(data, 1);
+    return 0;
 }
 
-void block_storage_write(const void *buffer, uint32_t length)
+int block_storage_write(const void *buffer, uint32_t length)
 {
     uint8_t *data = (uint8_t *)buffer;
 
@@ -142,11 +145,14 @@ void block_storage_write(const void *buffer, uint32_t length)
         data += len;
         current_address += len;
     }
+
+    return 0;
 }
 
-void block_storage_seek(uint32_t address)
+int block_storage_seek(uint32_t address)
 {
     current_address = address;
+    return 0;
 }
 
 void block_storage_flush(void)
