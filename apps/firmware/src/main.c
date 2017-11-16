@@ -62,6 +62,7 @@
 #include <stdio.h>
 #include <xc.h>
 #include "block_storage.h"
+#include "config.h"
 #include "fat16/fat16.h"
 #include "mbr.h"
 #include "mcu.h"
@@ -77,11 +78,6 @@
 
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
-
-struct board_config_t {
-    uint8_t mpu6050_enabled;
-    uint8_t sdcard_enabled;
-};
 
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "dev"
