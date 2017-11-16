@@ -117,7 +117,7 @@ int main(void)
     PMD7 = 0xFFFF;
     PMD8 = 0xFFFF;
 
-    /* Configure timer 1 to enable mcu_delay */
+    /* Configure timer 1 to enable mcu_delay, 1 tick = 1ms */
     timer1_power_up();
     timer1_configure(TIMER1_PRESCALER_1, 4000, 1);
     timer1_start();
