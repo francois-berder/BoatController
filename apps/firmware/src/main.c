@@ -199,7 +199,6 @@ int main(void)
     }
 
     printf("Initialisation finished\n");
-    printf("Starting main loop\n");
 
     /* Change status LED depending on MPU6050 and SD card initialisation */
     if (config.mpu6050_enabled && config.sdcard_enabled)
@@ -211,6 +210,7 @@ int main(void)
     else
         status_set_mode(STATUS_THREE_PER_2SEC);
 
+    printf("Starting controller\n");
     controller_run(config);
 
     return 0;
