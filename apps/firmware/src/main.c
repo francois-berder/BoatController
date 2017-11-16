@@ -62,6 +62,7 @@
 #include <stdio.h>
 #include <xc.h>
 #include "block_storage.h"
+#include "fat16/fat16.h"
 #include "mbr.h"
 #include "mcu.h"
 #include "mpu6050.h"
@@ -89,6 +90,13 @@ struct board_config_t {
 static const char *welcome_msg = "Boat Controller firmware " FIRMWARE_VERSION
                                  " - " __DATE__ " " __TIME__
                                  "\n";
+
+static struct storage_dev_t dev = {
+    block_storage_read,
+    block_storage_read_byte,
+    block_storage_write,
+    block_storage_seek
+};
 
 int main(void)
 {
@@ -184,6 +192,12 @@ int main(void)
         if (i == PARTITION_ENTRY_COUNT) {
             printf("Failed to found a FAT16 partition\n");
             config.sdcard_enabled = 0;
+        }
+
+        if (config.sdcard_enabled) {
+            uint32_t partition_offset = p.start_sector;
+            partition_offset <<= 9;
+            fat16_init(dev, partition_offset);
         }
     }
 
