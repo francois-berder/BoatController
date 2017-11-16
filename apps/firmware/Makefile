@@ -1,5 +1,6 @@
 APP=firmware
 APP_SRCS = src/block_storage.c \
+           src/controller.c \
            src/fat16/fat16_priv.c \
            src/fat16/fat16.c \
            src/fat16/path.c \

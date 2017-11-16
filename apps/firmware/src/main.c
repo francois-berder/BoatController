@@ -63,6 +63,7 @@
 #include <xc.h>
 #include "block_storage.h"
 #include "config.h"
+#include "controller.h"
 #include "fat16/fat16.h"
 #include "mbr.h"
 #include "mcu.h"
@@ -210,9 +211,7 @@ int main(void)
     else
         status_set_mode(STATUS_THREE_PER_2SEC);
 
-    while (1) {
-
-    }
+    controller_run(config);
 
     return 0;
 }
