@@ -30,7 +30,7 @@
 #define SCK_PIN             (GPIO_PIN(PORT_B, 6))
 #define CS_PIN              (GPIO_PIN(PORT_B, 7))
 
-#define CMD1_ATTEMPT_COUNT_MAX          (100)
+#define INIT_ATTEMPT_COUNT_MAX          (100)
 #define RESPONSE_ATTEMPT_COUNT_MAX      (128)
 #define DATA_START_TOKEN                (0xFE)
 #define CMD_TOKEN                       (0x40)
@@ -39,11 +39,13 @@
 
 enum SD_COMMAND {
     CMD0_GO_IDLE_STATE = 0,
-    ACMD41_SEND_OP_COND = 1,
+    CMD1_SEND_OP_COND = 1,
     CMD8_SEND_IF_COND = 8,
     CMD16_SET_BLOCKLEN = 16,
     CMD17_READ_SINGLE_BLOCK = 17,
     CMD24_WRITE_SINGLE_BLOCK = 24,
+    ACMD41_SEND_OP_COND = 41,
+    CMD55_APP_CMD = 55,
     CMD59_CRC_ON_OFF = 59
 };
 
@@ -122,10 +124,70 @@ static int send_cmd(uint8_t *response, uint8_t cmd, uint32_t arg, uint8_t crc)
     return ret;
 }
 
+/* Send CMD1 until the card returns 0 or times out */
+static int old_wakeup(void)
+{
+    uint8_t response;
+    uint16_t attempt_count = INIT_ATTEMPT_COUNT_MAX;
+
+    do {
+        attempt_count--;
+
+        if (send_cmd(&response, CMD1_SEND_OP_COND, 0, 0xF9) < 0)
+            return -1;
+
+        if (response == 0)
+            break;
+
+        /* Let's try again 10 ticks later if the card is not ready */
+        mcu_delay(10);
+    } while (attempt_count > 0 && response != 0);
+
+    if (attempt_count == 0 && response != 0)
+        return -1;
+
+    return 0;
+}
+
+/* Send CMD55/ACMD41 until the card returns 0 or times out */
+static int wakeup(uint8_t is_sdhc)
+{
+    uint8_t response;
+    uint16_t attempt_count = INIT_ATTEMPT_COUNT_MAX;
+
+    do {
+        attempt_count--;
+
+        if (send_cmd(&response, CMD55_APP_CMD, 0, 0x65) < 0)
+            return -1;
+
+        if (is_sdhc) {
+            if (send_cmd(&response, ACMD41_SEND_OP_COND, 0x40000000, 0x77) < 0)
+                return -1;
+        }
+        else {
+            if (send_cmd(&response, ACMD41_SEND_OP_COND, 0, 0xE5) < 0)
+                return -1;
+        }
+
+        if (response == 0)
+            break;
+
+        /* Let's try again 10 ticks later if the card is not ready */
+        mcu_delay(10);
+    } while (attempt_count > 0 && response != 0);
+
+    if (attempt_count == 0 && response != 0)
+        return -1;
+
+    return 0;
+}
+
 int sdcard_init(void)
 {
     uint8_t response;
     uint8_t is_sdhc = 0;
+    int ret;
 
     gpio_init_out(MOSI_PIN, 0);
     gpio_init_in(MISO_PIN);
@@ -152,26 +214,21 @@ int sdcard_init(void)
     if (send_cmd(&response, CMD8_SEND_IF_COND, 0x000001AA, 0x87) < 0)
         return -1;
 
-    if (response & 0x1)
+    if (response == 0x1)
         is_sdhc = 1;
 
-    /* Send ACMD41 until the card returns 0 or times out */
-    {
-        uint16_t cmd1_attempt_count = CMD1_ATTEMPT_COUNT_MAX;
-        do {
-            cmd1_attempt_count--;
+    /* Send CMD55 to find whether we need to send CMD1 or CMD55/ACMD41 to init card */
+    if (send_cmd(&response, CMD55_APP_CMD, 0, 0x65) < 0)
+        return -1;
 
-            if (send_cmd(&response, ACMD41_SEND_OP_COND, 0, DUMMY_CRC) < 0)
-                return -1;
+    /* Attempt to put SD card out of idle state */
+    if (response == 0x5)
+        ret = old_wakeup();
+    else
+        ret = wakeup(is_sdhc);
 
-            /* Let's try again 10 ticks later if the card is not ready */
-            if (response != 0)
-                mcu_delay(10);
-        } while (cmd1_attempt_count > 0 && response != 0);
-
-        if (cmd1_attempt_count == 0 && response != 0)
-            return -1;
-    }
+    if (ret)
+        return ret;
 
     if (send_cmd(&response, CMD59_CRC_ON_OFF, 0, DUMMY_CRC) < 0
     ||  (response & SD_STATUS_ERROR))
