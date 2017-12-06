@@ -208,18 +208,18 @@ int sdcard_init(void)
     /* Send CMD0 */
     if (send_cmd(&response, CMD0_GO_IDLE_STATE, 0, 0x95) < 0
     ||  (response & SD_STATUS_ERROR))
-        return -1;
+        goto sdcard_init_error;
 
     /* Send CMD8 */
     if (send_cmd(&response, CMD8_SEND_IF_COND, 0x000001AA, 0x87) < 0)
-        return -1;
+        goto sdcard_init_error;
 
     if (response == 0x1)
         is_sdhc = 1;
 
     /* Send CMD55 to find whether we need to send CMD1 or CMD55/ACMD41 to init card */
     if (send_cmd(&response, CMD55_APP_CMD, 0, 0x65) < 0)
-        return -1;
+        goto sdcard_init_error;
 
     /* Attempt to put SD card out of idle state */
     if (response == 0x5)
@@ -228,16 +228,16 @@ int sdcard_init(void)
         ret = wakeup(is_sdhc);
 
     if (ret)
-        return ret;
+        goto sdcard_init_error;
 
     if (send_cmd(&response, CMD59_CRC_ON_OFF, 0, DUMMY_CRC) < 0
     ||  (response & SD_STATUS_ERROR))
-        return -1;
+        goto sdcard_init_error;
 
     if (!is_sdhc) {
         if (send_cmd(&response, CMD16_SET_BLOCKLEN, SDCARD_BLOCK_LENGTH, DUMMY_CRC) < 0
         ||  (response & SD_STATUS_ERROR))
-            return -1;
+            goto sdcard_init_error;
     }
 
     /*
@@ -253,6 +253,11 @@ int sdcard_init(void)
     spi_enable(SPI_1);
 
     return 0;
+
+sdcard_init_error:
+    spi_disable(SPI_1);
+    spi_power_down(SPI_1);
+    return -1;
 }
 
 int sdcard_read_block(void *block, uint32_t sector)
