@@ -56,7 +56,7 @@ static unsigned int load_block(void)
     }
 
     /* No empty space in cache, let's evict an entry */
-    if (cache_index == CACHE_ENTRY_COUNT) {
+    if (i == CACHE_ENTRY_COUNT) {
         uint16_t counter = cache[0].status & CACHE_ENTRY_COUNTER_MASK;
         cache_index = 0;
 
