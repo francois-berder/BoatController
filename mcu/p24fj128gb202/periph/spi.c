@@ -222,11 +222,10 @@ void spi_fast_write(unsigned int spi_num, const void *tx_buffer, uint32_t length
         SPIxBUFL(spi_num) = *tx++;
 
         length -= 32;
-    }
 
-    SPIxSTATL(spi_num) &= ~_SPI1STATL_SPIROV_MASK;
-    while (!(SPIxSTATL(spi_num) & _SPI1STATL_SPIRBE_MASK)) {
-        (void)SPIxBUFL(spi_num);
+        /* Ignore any received bytes */
+        while (!(SPIxSTATL(spi_num) & _SPI1STATL_SPIRBE_MASK))
+            (void)SPIxBUFL(spi_num);
     }
 }
 
