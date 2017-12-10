@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Analyse samples collected from MPU6050."""
+"""
+Analyse samples collected from MPU6050.
+Flash mpu6050_collect application on the board, let it run for a while.
+Take out the SD card and copy MPU6050.TXT next to this script.
+Run analysis: ./analyse_samples.py MPU6050.TXT
+"""
 
 import csv
 import statistics
