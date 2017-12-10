@@ -41,28 +41,17 @@ struct mpu6050_sample_t {
 int mpu6050_init(void);
 
 /**
- * @brief Retrieves the number of samples available in the FIFO of the device.
- *
- * @return Number of samples in the FIFO.
+ * @return Number of samples in the FIFO
  */
-uint16_t mpu6050_get_sample_cnt(void);
+unsigned int mpu6050_get_sample_count(void);
 
 /**
- * @brief Reads an array of samples from the sensor
+ * @brief Reads a sample from the FIFO
  *
- * @param[out] samples Array to store samples from device.
- * @param[in] sample_cnt Number of samples to read from the device.
- */
-void mpu6050_read_fifo(struct mpu6050_sample_t *samples, uint16_t samples_cnt);
-
-/**
- * @brief Clears the FIFO on the device.
+ * If no samples are in the FIFO, this function does nothing.
  *
- * It has been found that reading the FIFO does not decrease the number of
- * samples until the FIFO gets full and discards new samples. Hence, it is
- * advised to periodically read every available samples from the device and
- * then clear the FIFO.
+ * @param[out] sample
  */
-void mpu6050_clear_fifo(void);
+void mpu6050_get_sample(struct mpu6050_sample_t *sample);
 
 #endif

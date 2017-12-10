@@ -21,6 +21,7 @@
 #include "mpu6050.h"
 #include "periph/gpio.h"
 #include "periph/i2c.h"
+#include "periph/timer.h"
 #include "periph_conf.h"
 
 #define SCL_PIN         (GPIO_PIN(PORT_B, 8))
@@ -61,6 +62,12 @@
 #define GYRO_Y_FIFO_EN      (0x20)
 #define GYRO_Z_FIFO_EN      (0x10)
 
+#define SAMPLE_FIFO_SIZE        (32)
+
+static volatile struct mpu6050_sample_t samples[SAMPLE_FIFO_SIZE];
+static volatile unsigned int sample_count;
+static volatile unsigned int fifo_start_index;
+
 static uint8_t read_8bit_reg(uint8_t address)
 {
     uint8_t value;
@@ -82,6 +89,32 @@ static void write_8bit_reg(uint8_t address, uint8_t value)
 static uint16_t to_le(uint8_t msb, uint8_t lsb)
 {
     return (msb << 8) | lsb;
+}
+
+/* Read a sample from MPU6050 and add it to the FIFO */
+void timer5_callback(void)
+{
+    uint8_t buffer[12];
+    uint8_t address = ACCEL_X_HIGH;
+    unsigned int index = (fifo_start_index + sample_count) & (SAMPLE_FIFO_SIZE - 1);
+
+    if (sample_count >= SAMPLE_FIFO_SIZE)
+        return;
+
+    i2c_write(I2C_1, MPU6050_ADDRESS, &address, 1);
+    i2c_read(I2C_1, MPU6050_ADDRESS, buffer, sizeof(buffer));
+
+    /* Fill accelerometer data */
+    samples[index].accel.x = to_le(buffer[0], buffer[1]);
+    samples[index].accel.y = to_le(buffer[2], buffer[3]);
+    samples[index].accel.z = to_le(buffer[4], buffer[5]);
+
+    /* Fill gyroscope data */
+    samples[index].gyro.x = to_le(buffer[6], buffer[7]);
+    samples[index].gyro.y = to_le(buffer[8], buffer[9]);
+    samples[index].gyro.z = to_le(buffer[10], buffer[11]);
+
+    ++sample_count;
 }
 
 int mpu6050_init(void)
@@ -112,60 +145,43 @@ int mpu6050_init(void)
 
     write_8bit_reg(CONFIG, 0);
 
-    /* Configure FIFO */
-    write_8bit_reg(USER_CTRL, FIFO_RESET);
-    mcu_delay(10);
-    write_8bit_reg(USER_CTRL, FIFO_EN);
-    write_8bit_reg(FIFO_CONFIG,
-                   GYRO_X_FIFO_EN |
-                   GYRO_Y_FIFO_EN |
-                   GYRO_Z_FIFO_EN |
-                   ACCEL_FIFO_EN);
-
     /* Configure accelerometer */
     write_8bit_reg(ACCEL_CONFIG, ACCEL_RANGE_4G);
 
     /* Configure gyroscope */
     write_8bit_reg(GYRO_CONFIG, GYRO_RANGE_500);
 
+    /* Configure timer 5 to fire every 20ms */
+    fifo_start_index = 0;
+    sample_count = 0;
+    timer_power_up(TIMER_5);
+    timer_configure(TIMER_5, TIMER5_PRESCALER_64, 1250, 1);
+    timer_start(TIMER_5);
+
     return 0;
 }
 
-uint16_t mpu6050_get_sample_cnt(void)
+unsigned int mpu6050_get_sample_count(void)
 {
-    uint8_t address = FIFO_COUNT_HIGH;
-    uint8_t buffer[2];
+    unsigned int samples_available;
 
-    i2c_write(I2C_1, MPU6050_ADDRESS, &address, 1);
-    i2c_read(I2C_1, MPU6050_ADDRESS, buffer, 2);
+    mcu_disable_interrupts();
+    samples_available = sample_count;
+    mcu_enable_interrupts();
 
-    return to_le(buffer[0], buffer[1]);
+    return samples_available;
 }
 
-void mpu6050_read_fifo(struct mpu6050_sample_t *samples, uint16_t samples_cnt)
+void mpu6050_get_sample(struct mpu6050_sample_t *sample)
 {
-    uint16_t i;
+    unsigned int index;
 
-    for (i = 0; i < samples_cnt; ++i) {
-        uint8_t buffer[12];
-        uint8_t address = FIFO_DATA;
-        i2c_write(I2C_1, MPU6050_ADDRESS, &address, 1);
-        i2c_read(I2C_1, MPU6050_ADDRESS, buffer, sizeof(buffer));
-
-        /* Fill accelerometer data */
-        samples[i].accel.x = to_le(buffer[0], buffer[1]);
-        samples[i].accel.y = to_le(buffer[2], buffer[3]);
-        samples[i].accel.z = to_le(buffer[4], buffer[5]);
-
-        /* Fill gyroscope data */
-        samples[i].gyro.x = to_le(buffer[6], buffer[7]);
-        samples[i].gyro.y = to_le(buffer[8], buffer[9]);
-        samples[i].gyro.z = to_le(buffer[10], buffer[11]);
+    mcu_disable_interrupts();
+    if (sample_count > 0) {
+        index = (fifo_start_index + sample_count) & (SAMPLE_FIFO_SIZE - 1);
+        *sample = samples[index];
+        ++fifo_start_index;
+        fifo_start_index &= (SAMPLE_FIFO_SIZE - 1);
     }
-}
-
-void mpu6050_clear_fifo(void)
-{
-    write_8bit_reg(USER_CTRL, FIFO_RESET);
-    write_8bit_reg(USER_CTRL, FIFO_EN);
+    mcu_enable_interrupts();
 }
