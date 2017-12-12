@@ -95,6 +95,20 @@ static struct storage_dev_t dev = {
     block_storage_seek
 };
 
+struct calibration_data {
+    struct {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+    } offset;
+    struct {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+    } coeff;
+};
+static struct calibration_data cdata;
+
 static void stop(const char *reason)
 {
     printf("\n%s\n", reason);
@@ -102,10 +116,163 @@ static void stop(const char *reason)
         ;
 }
 
+static void wait_for_user(void)
+{
+    char c;
+    do {
+        char buffer[128];
+        struct mpu6050_sample_t raw_sample;
+
+        mpu6050_clear_samples();
+        while (mpu6050_get_sample_count() == 0)
+            ;
+        mpu6050_get_sample(&raw_sample);
+        sprintf(buffer,
+                "\rPress enter to continue, (%d, %d, %d)\n",
+                raw_sample.accel.x, raw_sample.accel.y, raw_sample.accel.z);
+        printf("%s", buffer);
+        uart_read(UART_1, &c, 1);
+    } while (c != '\n');
+}
+
+static void compute_avg(int16_t *ax, int16_t *ay, int16_t *az,
+                        int16_t *gx, int16_t *gy, int16_t *gz)
+{
+    struct mpu6050_sample_t samples[SAMPLE_COUNT];
+    unsigned int i;
+    uint64_t avg[6] = {0, 0, 0, 0, 0, 0};
+
+    printf("Retrieving %u samples", SAMPLE_COUNT);
+    mpu6050_clear_samples();
+    for (i = 0; i < SAMPLE_COUNT; ++i) {
+        printf(".");
+        while (mpu6050_get_sample_count() == 0)
+            ;
+        mpu6050_get_sample(&samples[i]);
+    }
+    printf("\n");
+
+    /* Compute average for each component */
+    for (i = 0; i < SAMPLE_COUNT; ++i) {
+        avg[0] += samples[i].accel.x;
+        avg[1] += samples[i].accel.y;
+        avg[2] += samples[i].accel.z;
+        avg[3] += samples[i].gyro.x;
+        avg[4] += samples[i].gyro.y;
+        avg[5] += samples[i].gyro.z;
+    }
+    avg[0] >>= 7;
+    avg[1] >>= 7;
+    avg[2] >>= 7;
+    avg[3] >>= 7;
+    avg[4] >>= 7;
+    avg[5] >>= 7;
+
+    *ax = avg[0];
+    *ay = avg[1];
+    *az = avg[2];
+    *gx = avg[3];
+    *gy = avg[4];
+    *gz = avg[5];
+    printf("avg accel (%d, %d, %d)\n", *ax, *ay, *az);
+    printf("avg gyro (%d, %d, %d)\n", *gx, *gy, *gz);
+}
+
+static void compute_calibration_data(int16_t *raw_accel)
+{
+    int32_t x, x2;
+    int32_t y, y2;
+    int32_t z, z2;
+
+    x = raw_accel[0];
+    x2 = raw_accel[6];
+    cdata.coeff.x = 131072L / (x2 - x);
+    cdata.offset.x = - cdata.coeff.x * x;
+
+    y = raw_accel[1];
+    y2 = raw_accel[4];
+    cdata.coeff.y = 131072L / (y2 - y);
+    cdata.offset.y = - cdata.coeff.y * y;
+
+    z = raw_accel[8];
+    z2 = raw_accel[2];
+    cdata.coeff.z = 131072L / (z2 - z);
+    cdata.offset.z = - cdata.coeff.z * z;
+
+    printf("Calibration data:\n");
+    printf("coeff x = %d, offset x = %d\n", cdata.coeff.x, cdata.offset.x);
+    printf("coeff y = %d, offset y = %d\n", cdata.coeff.y, cdata.offset.y);
+    printf("coeff z = %d, offset z = %d\n", cdata.coeff.z, cdata.offset.z);
+}
+
+static void save_calibration_data(void)
+{
+    int fd;
+
+    printf("Saving to SD card...");
+    fd = fat16_open("/CALIB.TXT", 'w');
+    if (fd < 0) {
+        printf("failed\n");
+        return;
+    }
+
+    {
+        char buffer[64];
+        unsigned int len;
+        int ret;
+
+        sprintf(buffer, "%d, 0, 0, %d\n", cdata.coeff.x, cdata.offset.x);
+        len = strlen(buffer);
+        ret = fat16_write(fd, buffer, len);
+        if (ret < 0 || (unsigned int)ret != len) {
+            fat16_close(fd);
+            printf("failed\n");
+            return;
+        }
+    }
+
+    {
+        char buffer[64];
+        unsigned int len;
+        int ret;
+
+        sprintf(buffer, "0, %d, 0, %d\n", cdata.coeff.y, cdata.offset.y);
+        len = strlen(buffer);
+        ret = fat16_write(fd, buffer, len);
+        if (ret < 0 || (unsigned int)ret != len) {
+            fat16_close(fd);
+            printf("failed\n");
+            return;
+        }
+    }
+
+    {
+        char buffer[64];
+        unsigned int len;
+        int ret;
+
+        sprintf(buffer, "0, 0, %d, %d\n", cdata.coeff.z, cdata.offset.z);
+        len = strlen(buffer);
+        ret = fat16_write(fd, buffer, len);
+        if (ret < 0 || (unsigned int)ret != len) {
+            fat16_close(fd);
+            printf("failed\n");
+            return;
+        }
+    }
+
+    fat16_close(fd);
+    block_storage_flush();
+    printf("done\n");
+}
+
+
 int main(void)
 {
     unsigned int i;
     struct partition_info_t p;
+    int16_t raw_accel[9];
+    int16_t raw_gyro[9];
 
     mcu_set_system_clock(8000000LU);
 
@@ -184,76 +351,70 @@ int main(void)
     }
 
     printf("Initialisation finished\n");
-    printf("Ensure that the MPU6050 is immobile, on a flat surface\n");
 
+    printf("Place the MPU6050 on a flat surface such that Z axis is pointing to earth\n");
+    wait_for_user();
+    compute_avg(&raw_accel[0], &raw_accel[1], &raw_accel[2],
+                &raw_gyro[0], &raw_gyro[1], &raw_gyro[2]);
+
+    printf("Place the MPU6050 on a flat surface such that Y axis is pointing to earth\n");
+    wait_for_user();
+    compute_avg(&raw_accel[3], &raw_accel[4], &raw_accel[5],
+                &raw_gyro[3], &raw_gyro[4], &raw_gyro[5]);
+
+    printf("Place the MPU6050 on a flat surface such that X axis is pointing to earth\n");
+    wait_for_user();
+    compute_avg(&raw_accel[6], &raw_accel[7], &raw_accel[8],
+                &raw_gyro[6], &raw_gyro[7], &raw_gyro[8]);
+
+    compute_calibration_data(raw_accel);
+    save_calibration_data();
+
+    printf("\n");
     while (1) {
-        struct mpu6050_sample_t samples[SAMPLE_COUNT];
-        unsigned int j;
-        uint64_t avg[6] = {0, 0, 0, 0, 0, 0};
-        int ax, ay, az, gx, gy, gz;
+        char buffer[128];
+        struct mpu6050_sample_t raw_sample;
+        int16_t ax, ay, az;
 
-        printf("Retrieving %u samples", SAMPLE_COUNT);
         mpu6050_clear_samples();
-        for (j = 0; j < SAMPLE_COUNT; ++j) {
-            printf(".");
-            while (mpu6050_get_sample_count() == 0)
-                ;
-            mpu6050_get_sample(&samples[j]);
-        }
-        printf("\n");
+        while (mpu6050_get_sample_count() == 0)
+            ;
+        mpu6050_get_sample(&raw_sample);
 
-        /* Compute average for each channel */
-        for (j = 0; j < SAMPLE_COUNT; ++j) {
-            avg[0] += samples[j].accel.x;
-            avg[1] += samples[j].accel.y;
-            avg[2] += samples[j].accel.z;
-            avg[3] += samples[j].gyro.x;
-            avg[4] += samples[j].gyro.y;
-            avg[5] += samples[j].gyro.z;
-        }
-        avg[0] >>= 7;
-        avg[1] >>= 7;
-        avg[2] >>= 7;
-        avg[3] >>= 7;
-        avg[4] >>= 7;
-        avg[5] >>= 7;
-
-        ax = avg[0];
-        ay = avg[1];
-        az = avg[2];
-        gx = avg[3];
-        gy = avg[4];
-        gz = avg[5];
-        printf("avg accel (%d, %d, %d)\n", ax, ay, az);
-        printf("avg gyro (%d, %d, %d)\n", gx, gy, gz);
-
-        /* Saving to sd card */
         {
-            char buffer[128];
-            unsigned int len;
-            int ret;
+            int32_t x;
+            x = raw_sample.accel.x;
+            x <<= 4;
+            x *= cdata.coeff.x;
+            x >>= 4;
+            x += cdata.offset.x;
 
-            printf("Saving to SD card...");
-            int fd = fat16_open("/CALIB.TXT", 'w');
-            if (fd < 0) {
-                printf("failed\n");
-                continue;
-            }
+            int32_t y;
+            y = raw_sample.accel.y;
+            y <<= 4;
+            y *= cdata.coeff.y;
+            y >>= 4;
+            y += cdata.offset.y;
 
-            sprintf(buffer, "%d, %d, %d, %d, %d, %d\n", ax, ay, az, gx, gy, gz);
-            len = strlen(buffer);
-            ret = fat16_write(fd, buffer, len);
-            if (ret < 0 || (unsigned int)ret != len) {
-                printf("failed\n");
-                continue;
-            }
+            int32_t z;
+            z = raw_sample.accel.z;
+            z <<= 4;
+            z *= cdata.coeff.z;
+            z >>= 4;
+            z += cdata.offset.z;
 
-            fat16_close(fd);
-            block_storage_flush();
-            printf("done\n");
+            ax = x >> 4;
+            ay = y >> 4;
+            az = z >> 4;
         }
 
-        mcu_delay(1000);
+        sprintf(buffer,
+                "\rraw=(%d, %d, %d), calibrated=(%d, %d, %d)       ",
+                raw_sample.accel.x, raw_sample.accel.y, raw_sample.accel.z,
+                ax, ay, az);
+        printf("%s", buffer);
+
+        mcu_delay(100);
     }
 
     return 0;
