@@ -182,6 +182,7 @@ void mpu6050_get_sample(struct mpu6050_sample_t *sample)
         *sample = samples[index];
         ++fifo_start_index;
         fifo_start_index &= (SAMPLE_FIFO_SIZE - 1);
+        --sample_count;
     }
     mcu_enable_interrupts();
 }
