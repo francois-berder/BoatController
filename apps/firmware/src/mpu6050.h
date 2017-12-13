@@ -35,10 +35,30 @@ struct mpu6050_sample_t {
     } gyro;
 };
 
+struct mpu6050_calibration_data_t {
+    struct {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+    } offset;
+    struct {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+    } coeff;
+};
+
 /**
  * @brief Initialise MPU6050
  */
 int mpu6050_init(void);
+
+/**
+ * @brief Set calibration data for MPU6050
+ *
+ * @param[in] cdata
+ */
+void mpu6050_set_calibration_data(struct mpu6050_calibration_data_t cdata);
 
 /**
  * @return Number of samples in the FIFO

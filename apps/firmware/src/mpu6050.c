@@ -64,6 +64,7 @@
 
 #define SAMPLE_FIFO_SIZE        (32)
 
+static struct mpu6050_calibration_data_t cdata;
 static volatile struct mpu6050_sample_t samples[SAMPLE_FIFO_SIZE];
 static volatile unsigned int sample_count;
 static volatile unsigned int fifo_start_index;
@@ -89,6 +90,33 @@ static void write_8bit_reg(uint8_t address, uint8_t value)
 static uint16_t to_le(uint8_t msb, uint8_t lsb)
 {
     return (msb << 8) | lsb;
+}
+
+static void rectify_accel_data(struct mpu6050_sample_t *sample)
+{
+    int32_t ax, ay, az;
+
+    ax = sample->accel.x;
+    ax <<= 4;
+    ax *= cdata.coeff.x;
+    ax >>= 4;
+    ax += cdata.offset.x;
+
+    ay = sample->accel.y;
+    ay <<= 4;
+    ay *= cdata.coeff.y;
+    ay >>= 4;
+    ay += cdata.offset.y;
+
+    az = sample->accel.z;
+    az <<= 4;
+    az *= cdata.coeff.z;
+    az >>= 4;
+    az += cdata.offset.z;
+
+    sample->accel.x = ax >> 4;
+    sample->accel.y = ay >> 4;
+    sample->accel.z = az >> 4;
 }
 
 /* Read a sample from MPU6050 and add it to the FIFO */
@@ -119,6 +147,14 @@ void timer5_callback(void)
 
 int mpu6050_init(void)
 {
+    /* Set default calibration data */
+    cdata.coeff.x = 16;
+    cdata.offset.x = 0;
+    cdata.coeff.y = 16;
+    cdata.offset.y = 0;
+    cdata.coeff.z = 16;
+    cdata.offset.z = 0;
+
     gpio_init_out(SCL_PIN, 1);
     gpio_init_out(SDA_PIN, 1);
 
@@ -161,6 +197,11 @@ int mpu6050_init(void)
     return 0;
 }
 
+void mpu6050_set_calibration_data(struct mpu6050_calibration_data_t _cdata)
+{
+    cdata = _cdata;
+}
+
 unsigned int mpu6050_get_sample_count(void)
 {
     unsigned int samples_available;
@@ -174,7 +215,7 @@ unsigned int mpu6050_get_sample_count(void)
 
 void mpu6050_get_sample(struct mpu6050_sample_t *sample)
 {
-    unsigned int index;
+    unsigned int index = SAMPLE_FIFO_SIZE;
 
     mcu_disable_interrupts();
     if (sample_count > 0) {
@@ -185,4 +226,7 @@ void mpu6050_get_sample(struct mpu6050_sample_t *sample)
         --sample_count;
     }
     mcu_enable_interrupts();
+
+    if (index != SAMPLE_FIFO_SIZE)
+        rectify_accel_data(sample);
 }
