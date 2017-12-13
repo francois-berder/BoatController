@@ -2,6 +2,22 @@
 
 This application implements the calibration software for the MPU6050 accelerometer.
 
-This is still the first version of this application: it only computes the average of 128 samples while
-assuming that the MPU6050 lies on a flat surface, immobile. These averages (6 in total) are saved on
-a SD card using CSV format in the file ```/CALIB.TXT```.
+It asks the user to place the MPU6050 in three different positions (X, Y or Z axis pointing towards earth).
+In each position, the software takes 128 samples and computes the average acceleration and gyrometer vectors.
+Then, it computes a linear regression using the three accelerometer vectors (one for each position).
+
+```
+x = coeff_x * raw_x + offset_x
+y = coeff_y * raw_y + offset_y
+z = coeff_z * raw_z + offset_z
+```
+
+This gives 6 parameters in total, 2 for each component. They are not floating point numbers. They are manipulated as 12.4 fixed point integers.
+
+Finally, they are saved on a SD card in the file ```/CALIB.TXT``` in this format:
+
+```
+coeff_x, 0, 0, offset_x
+0, coeff_y, 0, offset_y
+0, 0, coeff_z, offset_z
+```
