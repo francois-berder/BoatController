@@ -17,11 +17,13 @@
  * along with pic24-framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- #include <stdint.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "block_storage.h"
 #include "mbr.h"
 #include "sdcard.h"
 
+#define BOOT_SIGNATURE          (0xAA55)
 #define BOOTSTRAP_CODE_SIZE     (446U)
 #define PARTITION_ENTRY_SIZE    (16U)
 #define PARTITION_TABLE_SIZE    (PARTITION_ENTRY_COUNT * PARTITION_ENTRY_SIZE)
@@ -47,6 +49,7 @@ void mbr_read_partition_table(void)
 {
     unsigned int i;
     uint8_t partition_table[PARTITION_TABLE_SIZE];
+    uint16_t boot_sig;
 
     /* Skip boostrap code */
     block_storage_seek(BOOTSTRAP_CODE_SIZE);
@@ -61,6 +64,11 @@ void mbr_read_partition_table(void)
         partitions[i].size = to_le32(&entry[12]);
         partitions[i].size *= SECTOR_SIZE;
     }
+
+    /* Check boot signature */
+    block_storage_read(&boot_sig, sizeof(boot_sig));
+    if (boot_sig != BOOT_SIGNATURE)
+        printf("Invalid boot signature in MBR\n");
 }
 
 struct partition_info_t mbr_get_partition_info(unsigned int index)
