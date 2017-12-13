@@ -135,12 +135,11 @@ static void wait_for_user(void)
     } while (c != '\n');
 }
 
-static void compute_avg(int16_t *ax, int16_t *ay, int16_t *az,
-                        int16_t *gx, int16_t *gy, int16_t *gz)
+static void compute_avg(int16_t *ax, int16_t *ay, int16_t *az)
 {
     struct mpu6050_sample_t samples[SAMPLE_COUNT];
     unsigned int i;
-    uint64_t avg[6] = {0, 0, 0, 0, 0, 0};
+    uint64_t avg[3] = {0, 0, 0};
 
     printf("Retrieving %u samples", SAMPLE_COUNT);
     mpu6050_clear_samples();
@@ -157,25 +156,15 @@ static void compute_avg(int16_t *ax, int16_t *ay, int16_t *az,
         avg[0] += samples[i].accel.x;
         avg[1] += samples[i].accel.y;
         avg[2] += samples[i].accel.z;
-        avg[3] += samples[i].gyro.x;
-        avg[4] += samples[i].gyro.y;
-        avg[5] += samples[i].gyro.z;
     }
     avg[0] >>= 7;
     avg[1] >>= 7;
     avg[2] >>= 7;
-    avg[3] >>= 7;
-    avg[4] >>= 7;
-    avg[5] >>= 7;
 
     *ax = avg[0];
     *ay = avg[1];
     *az = avg[2];
-    *gx = avg[3];
-    *gy = avg[4];
-    *gz = avg[5];
     printf("avg accel (%d, %d, %d)\n", *ax, *ay, *az);
-    printf("avg gyro (%d, %d, %d)\n", *gx, *gy, *gz);
 }
 
 static void compute_calibration_data(int16_t *raw_accel)
@@ -272,7 +261,6 @@ int main(void)
     unsigned int i;
     struct partition_info_t p;
     int16_t raw_accel[9];
-    int16_t raw_gyro[9];
 
     mcu_set_system_clock(8000000LU);
 
@@ -354,18 +342,15 @@ int main(void)
 
     printf("Place the MPU6050 on a flat surface such that Z axis is pointing to earth\n");
     wait_for_user();
-    compute_avg(&raw_accel[0], &raw_accel[1], &raw_accel[2],
-                &raw_gyro[0], &raw_gyro[1], &raw_gyro[2]);
+    compute_avg(&raw_accel[0], &raw_accel[1], &raw_accel[2]);
 
     printf("Place the MPU6050 on a flat surface such that Y axis is pointing to earth\n");
     wait_for_user();
-    compute_avg(&raw_accel[3], &raw_accel[4], &raw_accel[5],
-                &raw_gyro[3], &raw_gyro[4], &raw_gyro[5]);
+    compute_avg(&raw_accel[3], &raw_accel[4], &raw_accel[5]);
 
     printf("Place the MPU6050 on a flat surface such that X axis is pointing to earth\n");
     wait_for_user();
-    compute_avg(&raw_accel[6], &raw_accel[7], &raw_accel[8],
-                &raw_gyro[6], &raw_gyro[7], &raw_gyro[8]);
+    compute_avg(&raw_accel[6], &raw_accel[7], &raw_accel[8]);
 
     compute_calibration_data(raw_accel);
     save_calibration_data();
