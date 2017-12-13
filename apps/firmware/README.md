@@ -15,7 +15,7 @@ The controller will create a file with a random name in the root directory and s
 ```
 radio_dir, radio_speed, left_rudder, right_rudder, left_motor, right_motor
 ```
-The controller flushes all blocks every 100 frames such that not much data is lost when the board is powered off.
+The controller flushes all blocks every 2 seconds such that not much data is lost when the board is powered off.
 
 ### MPU6050 accel/gyro
 

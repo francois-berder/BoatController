@@ -93,19 +93,20 @@ void controller_run(struct board_config_t config)
 
             output_set_frame(output_frame);
 
-            if (fd >= 0) {
+           if (fd >= 0)
                 log_frame(radio_frame, output_frame);
-                ++counter;
-
-                /* Ensure that log file is periodically saved to SD card */
-                if (counter == 100) {
-                    counter = 0;
-                    block_storage_flush();
-                }
-            }
         }
 
         /* Wait 5ms */
         mcu_delay(5);
+
+        /* Ensure that log file is periodically saved to SD card */
+        if (fd >= 0) {
+            counter += 5;
+            if (counter >= 2000) {
+                counter = 0;
+                block_storage_flush();
+            }
+        }
     }
 }
