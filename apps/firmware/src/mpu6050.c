@@ -168,8 +168,11 @@ int mpu6050_init(void)
      */
     mcu_delay(100);
 
-    if (read_8bit_reg(WHO_AM_I) != MPU6050_DEVICE_ID)
+    if (read_8bit_reg(WHO_AM_I) != MPU6050_DEVICE_ID) {
+        i2c_disable(I2C_1);
+        i2c_power_down(I2C_1);
         return -1;
+    }
 
     /* Reset device - clears most registers to 0 */
     write_8bit_reg(PWR_MGMT_1, RESET);
