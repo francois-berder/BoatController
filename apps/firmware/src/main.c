@@ -60,6 +60,7 @@
 #pragma config IOL1WAY = OFF
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <xc.h>
 #include "block_storage.h"
 #include "config.h"
@@ -94,6 +95,95 @@ static struct storage_dev_t dev = {
     block_storage_write,
     block_storage_seek
 };
+
+static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
+{
+    int fd;
+    char buffer[128];
+    unsigned int len = 0;
+    unsigned int i = 0;
+    int ret = 0;
+    char *beg = NULL;
+    unsigned int num = 0;
+
+    fd = fat16_open("/CALIB.TXT", 'r');
+    if (fd < 0)
+        return -1;
+
+    /* Attempt to store entire file content into buffer */
+    while (len < 128 && (ret = fat16_read(fd, &buffer[len], 1)) == 1)
+        ++len;
+
+    fat16_close(fd);
+
+    if (i == 128 || ret < 0)
+        return -1;
+
+    /* Replace comma and newlines by NULL character */
+    for (i = 0; i < len; ++i) {
+        if (buffer[i] == ',' || buffer[i] == '\n')
+            buffer[i] = '\0';
+    }
+
+    /*
+     * Parse buffer. We assume that format of this file is:
+     *
+     * coeff.x, 0, 0, offset.x
+     * 0, coeff.y, 0, offset.y
+     * 0, 0, coeff.z, offset.z
+     *
+     */
+    beg = &buffer[0];
+    while (i < len && *beg == ' ') {    /* Skip spaces at beginning of file */
+        ++i;
+        beg = &buffer[i];
+    }
+    for (; i < len; ++i) {
+        if (buffer[i] == '\0') {
+            unsigned int j = i + 1;
+            unsigned int n = atoi(beg);
+
+            switch (num) {
+            case 0:
+                cdata->coeff.x = n;
+                break;
+            case 2:
+                cdata->offset.x = n;
+                break;
+            case 5:
+                cdata->coeff.y = n;
+                break;
+            case 7:
+                cdata->offset.y = n;
+                break;
+            case 10:
+                cdata->coeff.z = n;
+                break;
+            case 11:
+                cdata->offset.z = n;
+                break;
+            default:
+                break;
+            }
+
+            ++num;
+
+            beg = &buffer[j];
+
+            /* Skip spaces after comma or newline */
+            while (j < len && *beg == ' ') {
+                ++j;
+                beg = &buffer[j];
+            }
+        }
+    }
+
+    /* We expect 12 numbers in this file */
+    if (num != 12)
+        return -1;
+
+    return 0;
+}
 
 int main(void)
 {
@@ -196,6 +286,16 @@ int main(void)
             partition_offset <<= 9;
             fat16_init(dev, partition_offset);
         }
+    }
+
+    /* Attempt to retrieve calibration data for MPU6050 from SD card */
+    if (config.mpu6050_enabled && config.sdcard_enabled) {
+        struct mpu6050_calibration_data_t cdata;
+
+        if (load_calibration_data(&cdata) < 0)
+            printf("Failed to load calibration data from SD card.\n");
+        else
+            mpu6050_set_calibration_data(cdata);
     }
 
     printf("Initialisation finished\n");
