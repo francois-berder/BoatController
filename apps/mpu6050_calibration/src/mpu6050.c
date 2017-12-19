@@ -94,7 +94,7 @@ static uint16_t to_le(uint8_t msb, uint8_t lsb)
 /* Read a sample from MPU6050 and add it to the FIFO */
 void timer5_callback(void)
 {
-    uint8_t buffer[12];
+    uint8_t buffer[14];
     uint8_t address = ACCEL_X_HIGH;
     unsigned int index = (fifo_start_index + sample_count) & (SAMPLE_FIFO_SIZE - 1);
 
@@ -109,10 +109,12 @@ void timer5_callback(void)
     samples[index].accel.y = to_le(buffer[2], buffer[3]);
     samples[index].accel.z = to_le(buffer[4], buffer[5]);
 
+    /* buffer[6] and buffer[7] contain data about temperature */
+
     /* Fill gyroscope data */
-    samples[index].gyro.x = to_le(buffer[6], buffer[7]);
-    samples[index].gyro.y = to_le(buffer[8], buffer[9]);
-    samples[index].gyro.z = to_le(buffer[10], buffer[11]);
+    samples[index].gyro.x = to_le(buffer[8], buffer[9]);
+    samples[index].gyro.y = to_le(buffer[10], buffer[11]);
+    samples[index].gyro.z = to_le(buffer[12], buffer[13]);
 
     ++sample_count;
 }
