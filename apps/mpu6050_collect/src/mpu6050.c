@@ -123,7 +123,7 @@ int mpu6050_init(void)
 
 void mpu6050_get_sample(struct mpu6050_sample_t *sample)
 {
-    uint8_t buffer[12];
+    uint8_t buffer[14];
     uint8_t address = ACCEL_X_HIGH;
     i2c_write(I2C_1, MPU6050_ADDRESS, &address, 1);
     i2c_read(I2C_1, MPU6050_ADDRESS, buffer, sizeof(buffer));
@@ -133,8 +133,10 @@ void mpu6050_get_sample(struct mpu6050_sample_t *sample)
     sample->accel.y = to_le(buffer[2], buffer[3]);
     sample->accel.z = to_le(buffer[4], buffer[5]);
 
+    /* buffer[6] and buffer[7] contain data about temperature */
+
     /* Fill gyroscope data */
-    sample->gyro.x = to_le(buffer[6], buffer[7]);
-    sample->gyro.y = to_le(buffer[8], buffer[9]);
-    sample->gyro.z = to_le(buffer[10], buffer[11]);
+    sample->gyro.x = to_le(buffer[8], buffer[9]);
+    sample->gyro.y = to_le(buffer[10], buffer[11]);
+    sample->gyro.z = to_le(buffer[12], buffer[13]);
 }
