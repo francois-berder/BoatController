@@ -27,7 +27,8 @@ TARGET_ELF := $(BINDIR)/$(APP)_$(BOARD).elf
 TARGET := $(BINDIR)/$(APP)_$(BOARD).hex
 IDIRS :=  $(FRAMEWORK_ROOT_DIR)/mcu/include \
 		  $(FRAMEWORK_ROOT_DIR)/mcu/$(MCU) \
-		  $(FRAMEWORK_ROOT_DIR)/boards/$(BOARD)
+		  $(FRAMEWORK_ROOT_DIR)/boards/$(BOARD) \
+		  $(FRAMEWORK_ROOT_DIR)/drivers
 IDIRS := $(realpath $(IDIRS))
 CFLAGS += -Wall -Wextra -Werror
 release: CFLAGS += -O1
@@ -43,6 +44,10 @@ RM_ON_CLEAN += $(TARGET:%.elf=%_pickit.hex) $(BINDIR)/output.map $(BINDIR)
 SRCS := $(addprefix mcu/$(MCU)/,$(MCU_SRCS))
 SRCS += $(addprefix boards/$(BOARD)/,$(BOARD_SRCS))
 SRCS += $(addprefix apps/$(APP)/,$(APP_SRCS))
+
+DRIVER_SRCS := $(foreach DRIVER,$(DRIVERS),$(wildcard $(FRAMEWORK_ROOT_DIR)/drivers/$(DRIVER)/*.c))
+DRIVER_SRCS := $(DRIVER_SRCS:$(FRAMEWORK_ROOT_DIR)/%.c=%.c)
+SRCS += $(DRIVER_SRCS)
 SRCS := $(filter %.c %.S %.s, $(SRCS))
 
 OBJS := $(SRCS:%.c=$(BUILDDIR)/%.o)
