@@ -41,8 +41,10 @@ struct mpu6050_sample_t {
  * I2C must have been initialised and GPIO pins configured as digital I/O.
  *
  * @param[in] i2c_num
+ * @param[in] enable_acc 0 to disable accelerometer, 1 to enable it
+ * @param[in] enable_gyro 0 to disable gyroscope, 1 to enable it
  */
-int mpu6050_init(unsigned int i2c_num);
+int mpu6050_init(unsigned int i2c_num, unsigned int enable_acc, unsigned int enable_gyro);
 
 /**
  * @brief Get accelerometer and gyroscope readings from the MPU6050

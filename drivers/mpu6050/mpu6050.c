@@ -33,6 +33,7 @@
 #define FIFO_CONFIG         (0x23)
 #define USER_CTRL           (0x6A)
 #define PWR_MGMT_1          (0x6B)
+#define PWR_MGMT_2          (0x6C)
 #define FIFO_COUNT_HIGH     (0x72)
 #define FIFO_COUNT_LOW      (0x73)
 #define FIFO_DATA           (0x74)
@@ -44,6 +45,12 @@
 #define RESET               (0x80)
 #define SLEEP               (0x40)
 #define TEMP_DIS            (0x08)
+#define STBY_XA             (0x20)
+#define STBY_YA             (0x10)
+#define STBY_ZA             (0x08)
+#define STBY_XG             (0x04)
+#define STBY_YG             (0x02)
+#define STBY_ZG             (0x01)
 #define ACCEL_RANGE_2G      (0x00)
 #define ACCEL_RANGE_4G      (0x08)
 #define ACCEL_RANGE_8G      (0x10)
@@ -82,7 +89,7 @@ static uint16_t to_le(uint8_t msb, uint8_t lsb)
     return (msb << 8) | lsb;
 }
 
-int mpu6050_init(unsigned int i2c_num)
+int mpu6050_init(unsigned int i2c_num, unsigned int enable_acc, unsigned int enable_gyro)
 {
     if (read_8bit_reg(i2c_num, WHO_AM_I) != MPU6050_DEVICE_ID)
         return -1;
@@ -101,10 +108,22 @@ int mpu6050_init(unsigned int i2c_num)
     write_8bit_reg(i2c_num, CONFIG, 0);
 
     /* Configure accelerometer */
-    write_8bit_reg(i2c_num, ACCEL_CONFIG, ACCEL_RANGE_4G);
+    if (enable_acc) {
+        write_8bit_reg(i2c_num, ACCEL_CONFIG, ACCEL_RANGE_4G);
+    } else {
+        uint8_t reg = read_8bit_reg(i2c_num, PWR_MGMT_2);
+        reg |= (STBY_XA | STBY_YA | STBY_ZA);
+        write_8bit_reg(i2c_num, PWR_MGMT_2, reg);
+    }
 
     /* Configure gyroscope */
-    write_8bit_reg(i2c_num, GYRO_CONFIG, GYRO_RANGE_500);
+    if (enable_gyro) {
+        write_8bit_reg(i2c_num, GYRO_CONFIG, GYRO_RANGE_500);
+    } else {
+        uint8_t reg = read_8bit_reg(i2c_num, PWR_MGMT_2);
+        reg |= (STBY_XG | STBY_YG | STBY_ZG);
+        write_8bit_reg(i2c_num, PWR_MGMT_2, reg);
+    }
 
     return 0;
 }
