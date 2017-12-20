@@ -43,6 +43,7 @@
 #define MPU6050_DEVICE_ID   (0x68)
 #define RESET               (0x80)
 #define SLEEP               (0x40)
+#define TEMP_DIS            (0x08)
 #define ACCEL_RANGE_2G      (0x00)
 #define ACCEL_RANGE_4G      (0x08)
 #define ACCEL_RANGE_8G      (0x10)
@@ -93,6 +94,9 @@ int mpu6050_init(unsigned int i2c_num)
     /* Wake up from sleep */
     write_8bit_reg(i2c_num, PWR_MGMT_1, 0);
     mcu_delay(10);
+
+    /* Disable temperature sensor */
+    write_8bit_reg(i2c_num, PWR_MGMT_1, TEMP_DIS);
 
     write_8bit_reg(i2c_num, CONFIG, 0);
 
