@@ -176,3 +176,17 @@ void mpu6050_get_gyro(unsigned int i2c_num, struct mpu6050_sample_t *sample)
     sample->gyro.y = to_le(buffer[2], buffer[3]);
     sample->gyro.z = to_le(buffer[4], buffer[5]);
 }
+
+void mpu6050_power_up(unsigned int i2c_num)
+{
+    uint8_t reg = read_8bit_reg(i2c_num, PWR_MGMT_1);
+    reg &= ~SLEEP;
+    write_8bit_reg(i2c_num, PWR_MGMT_1, reg);
+}
+
+void mpu6050_power_down(unsigned int i2c_num)
+{
+    uint8_t reg = read_8bit_reg(i2c_num, PWR_MGMT_1);
+    reg |= SLEEP;
+    write_8bit_reg(i2c_num, PWR_MGMT_1, reg);
+}

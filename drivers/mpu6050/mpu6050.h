@@ -76,4 +76,18 @@ void mpu6050_get_acc(unsigned int i2c_num, struct mpu6050_sample_t *sample);
  */
 void mpu6050_get_gyro(unsigned int i2c_num, struct mpu6050_sample_t *sample);
 
+/**
+ * @brief Power up MPU6050
+ *
+ * @param[in] i2c_num
+ */
+void mpu6050_power_up(unsigned int i2c_num);
+
+/**
+ * @brief Power down MPU6050
+ *
+ * @param[in] i2c_num
+ */
+void mpu6050_power_down(unsigned int i2c_num);
+
 #endif
