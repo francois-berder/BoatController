@@ -14,6 +14,7 @@
 
 
 include $(FRAMEWORK_ROOT_DIR)/boards/$(BOARD)/Makefile.board
+-include $(LIBS:%=$(FRAMEWORK_ROOT_DIR)/libs/Makefile.%)
 
 CC=xc16-gcc
 BIN2HEX := xc16-bin2hex
@@ -28,7 +29,8 @@ TARGET := $(BINDIR)/$(APP)_$(BOARD).hex
 IDIRS :=  $(FRAMEWORK_ROOT_DIR)/mcu/include \
 		  $(FRAMEWORK_ROOT_DIR)/mcu/$(MCU) \
 		  $(FRAMEWORK_ROOT_DIR)/boards/$(BOARD) \
-		  $(FRAMEWORK_ROOT_DIR)/drivers
+		  $(FRAMEWORK_ROOT_DIR)/drivers \
+		  $(FRAMEWORK_ROOT_DIR)/libs
 IDIRS := $(realpath $(IDIRS))
 CFLAGS += -Wall -Wextra -Werror
 release: CFLAGS += -O1
@@ -44,6 +46,7 @@ RM_ON_CLEAN += $(TARGET:%.elf=%_pickit.hex) $(BINDIR)/output.map $(BINDIR)
 SRCS := $(addprefix mcu/$(MCU)/,$(MCU_SRCS))
 SRCS += $(addprefix boards/$(BOARD)/,$(BOARD_SRCS))
 SRCS += $(addprefix apps/$(APP)/,$(APP_SRCS))
+SRCS += $(addprefix libs/,$(LIBS_SRCS))
 
 DRIVER_SRCS := $(foreach DRIVER,$(DRIVERS),$(wildcard $(FRAMEWORK_ROOT_DIR)/drivers/$(DRIVER)/*.c))
 DRIVER_SRCS := $(DRIVER_SRCS:$(FRAMEWORK_ROOT_DIR)/%.c=%.c)
