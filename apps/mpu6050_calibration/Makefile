@@ -8,6 +8,7 @@ APP_SRCS = src/block_storage.c \
 # Disable debug print from fat16 driver
 CFLAGS += -DNDEBUG
 LIBS = fat16
+DRIVERS = mpu6050
 
 BOARD=boat_controller
 FRAMEWORK_ROOT_DIR=$(CURDIR)/../..
