@@ -1,0 +1,5 @@
+LIBS_SRCS += fat16/fat16_priv.c \
+             fat16/fat16.c \
+             fat16/path.c \
+             fat16/rootdir.c \
+             fat16/subdir.c
