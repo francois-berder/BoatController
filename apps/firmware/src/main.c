@@ -109,6 +109,41 @@ static struct storage_dev_t dev = {
     sdcard_cache_seek
 };
 
+/**
+ * @brief Try to find a FAT16 partition on the SD card
+ *
+ * @return First sector of the FAT16 partition, 0 if no
+ *         partition was found.
+ */
+static uint32_t find_fat16_partition(void)
+{
+
+    unsigned int i;
+    uint32_t first_sector = 0;
+
+    printf("Reading MBR...");
+    mbr_read_partition_table();
+    printf("done\n");
+
+    printf("Looking for a FAT16 partition...\n");
+    for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
+        struct partition_info_t p = mbr_get_partition_info(i);
+        if ((p.status == BOOTABLE_PARTITION || p.status == INACTIVE_PARTITION)
+        &&  p.type == FAT16_PARTITION_TYPE) {
+            uint32_t size_100kB = p.size / 100000; /* size in 100kB unit */
+            printf("Found FAT16 partition at entry %u\n", i);
+            printf("\tstart_sector: %lu\n", p.start_sector);
+            printf("\tsize: %lu bytes (%lu.%lu MB)\n", p.size, size_100kB / 10, size_100kB % 10);
+            first_sector = p.start_sector;
+            break;
+        }
+    }
+    if (i == PARTITION_ENTRY_COUNT)
+        printf("Failed to found a FAT16 partition\n");
+
+    return first_sector;
+}
+
 static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
 {
     int fd;
@@ -201,8 +236,6 @@ static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
 int main(void)
 {
     struct board_config_t config = {1, 1};
-    unsigned int i;
-    struct partition_info_t p;
     struct mpu6050_dev_t mpu6050_dev;
     struct sdcard_spi_dev_t sdcard_dev;
 
@@ -295,35 +328,17 @@ int main(void)
     }
 
     if (config.sdcard_enabled) {
+        uint32_t partition_offset;
         printf("Configuring block storage...");
         sdcard_cache_init(sdcard_dev);
         printf("done\n");
 
-        printf("Reading MBR...");
-        mbr_read_partition_table();
-        printf("done\n");
-
-        printf("Looking for a FAT16 partition...\n");
-        for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
-            p = mbr_get_partition_info(i);
-            if ((p.status == BOOTABLE_PARTITION || p.status == INACTIVE_PARTITION)
-            &&  p.type == FAT16_PARTITION_TYPE) {
-                uint32_t size_100kB = p.size / 100000; /* size in 100kB unit */
-                printf("Found FAT16 partition at entry %u\n", i);
-                printf("\tstart_sector: %lu\n", p.start_sector);
-                printf("\tsize: %lu bytes (%lu.%lu MB)\n", p.size, size_100kB / 10, size_100kB % 10);
-                break;
-            }
-        }
-        if (i == PARTITION_ENTRY_COUNT) {
-            printf("Failed to found a FAT16 partition\n");
-            config.sdcard_enabled = 0;
-        }
-
-        if (config.sdcard_enabled) {
-            uint32_t partition_offset = p.start_sector;
+        partition_offset = find_fat16_partition();
+        if (partition_offset > 0) {
             partition_offset <<= 9;
             fat16_init(dev, partition_offset);
+        } else {
+            config.sdcard_enabled = 0;
         }
     }
 
