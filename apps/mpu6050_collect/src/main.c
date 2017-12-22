@@ -89,6 +89,8 @@
 #define SCK_PIN         (GPIO_PIN(PORT_B, 6))
 #define CS_PIN          (GPIO_PIN(PORT_B, 7))
 
+#define LED_PIN         (GPIO_PIN(PORT_B, 5))
+
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "dev"
 #endif
@@ -173,6 +175,9 @@ int main(void)
     timer1_power_up();
     timer1_configure(TIMER1_PRESCALER_1, 4000, 1);
     timer1_start();
+
+    /* Turn on LED pin */
+    gpio_init_out(LED_PIN, 1);
 
     /* Configure uart */
     gpio_init_out(UART_TX_PIN, 1);
@@ -287,6 +292,7 @@ int main(void)
         printf(".");
 
         if (counter > 50) {
+            gpio_toggle(LED_PIN);
             printf("saving to sdcard\n");
             sdcard_cache_flush();
             counter = 0;
