@@ -21,3 +21,6 @@ coeff_x, 0, 0, offset_x
 0, coeff_y, 0, offset_y
 0, 0, coeff_z, offset_z
 ```
+### LED status
+
+The LED is turned on during initialisation. Once initialisation is finished and during calibration, the LED is blinking. If the LED is not blinking, something went wrong during the initialisation. After calibration, the LED stops blinking.

@@ -69,6 +69,7 @@
 #include "periph/gpio.h"
 #include "periph/i2c.h"
 #include "periph/spi.h"
+#include "periph/timer.h"
 #include "periph/timer1.h"
 #include "periph/uart.h"
 #include "periph_conf.h"
@@ -129,6 +130,11 @@ static void stop(const char *reason)
     printf("\n%s\n", reason);
     while (1)
         ;
+}
+
+void timer2_callback(void)
+{
+    gpio_toggle(LED_PIN);
 }
 
 /**
@@ -416,6 +422,11 @@ int main(void)
 
     printf("Initialisation finished\n");
 
+    /* Configure timer 2 to blink LED */
+    timer_power_up(TIMER_2);
+    timer_configure(TIMER_2, TIMER3_PRESCALER_256, 13000, 1);
+    timer_start(TIMER_2);
+
     printf("Place the MPU6050 on a flat surface such that Z axis is pointing to earth\n");
     wait_for_user();
     compute_avg(&raw_accel[0], &raw_accel[1], &raw_accel[2]);
@@ -432,6 +443,12 @@ int main(void)
     save_calibration_data();
 
     printf("\n");
+
+    /* Stop blinking LED */
+    timer_stop(TIMER_2);
+    timer_power_down(TIMER_2);
+    gpio_write(LED_PIN, 1);
+
     while (1) {
         char buffer[128];
         struct mpu6050_sample_t raw_sample;
