@@ -309,7 +309,7 @@ int main(void)
         status_set_mode(STATUS_THREE_PER_2SEC);
 
     printf("Starting controller\n");
-    controller_run(config);
+    controller_run(config, imu_dev);
 
     return 0;
 }

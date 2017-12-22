@@ -21,7 +21,8 @@
 #define __CONTROLLER_H__
 
 #include "config.h"
+#include "mpu6050/mpu6050.h"
 
-void controller_run(struct board_config_t config);
+void controller_run(struct board_config_t config, struct mpu6050_dev_t imu_dev);
 
 #endif

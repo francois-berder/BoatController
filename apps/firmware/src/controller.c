@@ -21,6 +21,7 @@
 #include "block_storage.h"
 #include "controller.h"
 #include "fat16/fat16.h"
+#include "imu/imu.h"
 #include "mcu.h"
 #include "output.h"
 #include "periph/crypto.h"
@@ -72,12 +73,17 @@ static void log_frame(struct radio_frame_t rf, struct output_frame_t of)
         fat16_write(fd, buffer, ret);
 }
 
-void controller_run(struct board_config_t config)
+void controller_run(struct board_config_t config, struct mpu6050_dev_t imu_dev)
 {
     unsigned int counter = 0;
 
     if (config.sdcard_enabled) {
         open_log_file();
+    }
+
+    if (config.mpu6050_enabled) {
+        imu_init(imu_dev);
+        imu_start();
     }
 
     while (1) {
