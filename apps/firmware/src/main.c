@@ -68,7 +68,7 @@
 #include "fat16/fat16.h"
 #include "mbr.h"
 #include "mcu.h"
-#include "mpu6050.h"
+#include "mpu6050/mpu6050.h"
 #include "output.h"
 #include "periph/gpio.h"
 #include "periph/timer1.h"
@@ -128,9 +128,9 @@ static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
     /*
      * Parse buffer. We assume that format of this file is:
      *
-     * coeff.x, 0, 0, offset.x
-     * 0, coeff.y, 0, offset.y
-     * 0, 0, coeff.z, offset.z
+     * accel.coeff.x, 0, 0, accel.offset.x
+     * 0, accel.coeff.y, 0, accel.offset.y
+     * 0, 0, accel.coeff.z, accel.offset.z
      *
      */
     beg = &buffer[0];
@@ -145,22 +145,22 @@ static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
 
             switch (num) {
             case 0:
-                cdata->coeff.x = n;
+                cdata->accel.coeff.x = n;
                 break;
             case 2:
-                cdata->offset.x = n;
+                cdata->accel.offset.x = n;
                 break;
             case 5:
-                cdata->coeff.y = n;
+                cdata->accel.coeff.y = n;
                 break;
             case 7:
-                cdata->offset.y = n;
+                cdata->accel.offset.y = n;
                 break;
             case 10:
-                cdata->coeff.z = n;
+                cdata->accel.coeff.z = n;
                 break;
             case 11:
-                cdata->offset.z = n;
+                cdata->accel.offset.z = n;
                 break;
             default:
                 break;
@@ -190,6 +190,7 @@ int main(void)
     struct board_config_t config = {1, 1};
     unsigned int i;
     struct partition_info_t p;
+    struct mpu6050_dev_t imu_dev;
 
     mcu_set_system_clock(8000000LU);
 
@@ -239,7 +240,8 @@ int main(void)
 
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
-    if (!mpu6050_init()) {
+    imu_dev.i2c_num = I2C_1;
+    if (!mpu6050_init(&imu_dev, 1, 1)) {
         printf("done\n");
     } else {
         printf("failed\n");
@@ -290,12 +292,8 @@ int main(void)
 
     /* Attempt to retrieve calibration data for MPU6050 from SD card */
     if (config.mpu6050_enabled && config.sdcard_enabled) {
-        struct mpu6050_calibration_data_t cdata;
-
-        if (load_calibration_data(&cdata) < 0)
+        if (load_calibration_data(&imu_dev.cdata) < 0)
             printf("Failed to load calibration data from SD card.\n");
-        else
-            mpu6050_set_calibration_data(cdata);
     }
 
     printf("Initialisation finished\n");
