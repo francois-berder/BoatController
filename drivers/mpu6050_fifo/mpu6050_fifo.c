@@ -17,8 +17,8 @@
  * along with pic24-framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "imu.h"
 #include "mcu.h"
+#include "mpu6050_fifo/mpu6050_fifo.h"
 #include "periph/timer.h"
 #include "periph_conf.h"
 
@@ -31,27 +31,27 @@ static volatile struct mpu6050_sample_t samples[IMU_FIFO_DEPTH];
 static volatile unsigned int sample_count;
 static volatile unsigned int fifo_start_index;
 
-void imu_init(struct mpu6050_dev_t _dev)
+void mpu6050_fifo_init(struct mpu6050_dev_t _dev)
 {
     dev = _dev;
     sample_count = 0;
     fifo_start_index = 0;
 }
 
-void imu_start(void)
+void mpu6050_fifo_start(void)
 {
     timer_power_up(TIMER_5);
     timer_configure(TIMER_5, TIMER5_PRESCALER_64, 1250, 1);
     timer_start(TIMER_5);
 }
 
-void imu_stop(void)
+void mpu6050_fifo_stop(void)
 {
     timer_stop(TIMER_5);
     timer_power_down(TIMER_5);
 }
 
-void imu_clear_samples(void)
+void mpu6050_fifo_clear_samples(void)
 {
     mcu_disable_interrupts();
     fifo_start_index = 0;
@@ -59,7 +59,7 @@ void imu_clear_samples(void)
     mcu_enable_interrupts();
 }
 
-unsigned int imu_get_sample_count(void)
+unsigned int mpu6050_fifo_get_sample_count(void)
 {
     unsigned int tmp;
 
@@ -70,7 +70,7 @@ unsigned int imu_get_sample_count(void)
     return tmp;
 }
 
-int imu_get_sample(struct mpu6050_sample_t *sample)
+int mpu6050_fifo_get_sample(struct mpu6050_sample_t *sample)
 {
     unsigned int index;
     unsigned int ret = 0;

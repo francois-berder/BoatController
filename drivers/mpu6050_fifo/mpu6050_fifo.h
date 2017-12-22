@@ -17,35 +17,35 @@
  * along with pic24-framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __IMU_H__
-#define __IMU_H__
+#ifndef __MPU6050_FIFO_H__
+#define __MPU6050_FIFO_H__
 
 #include "mpu6050/mpu6050.h"
 
 /**
  * @brief Initialise FIFO and timer
  */
-void imu_init(struct mpu6050_dev_t dev);
+void mpu6050_fifo_init(struct mpu6050_dev_t dev);
 
 /**
  * @brief Start collecting samples
  */
-void imu_start(void);
+void mpu6050_fifo_start(void);
 
 /**
  * @brief Stop collecting samples
  */
-void imu_stop(void);
+void mpu6050_fifo_stop(void);
 
 /**
  * @brief Clear all samples in the FIFO
  */
-void imu_clear_samples(void);
+void mpu6050_fifo_clear_samples(void);
 
 /**
  * @return Number of samples available
  */
-unsigned int imu_get_sample_count(void);
+unsigned int mpu6050_fifo_get_sample_count(void);
 
 /**
  * @brief Get a sample from the FIFO
@@ -54,6 +54,6 @@ unsigned int imu_get_sample_count(void);
  * @retval 0 No samples available
  * @retval -1 An error occured
  */
-int imu_get_sample(struct mpu6050_sample_t *sample);
+int mpu6050_fifo_get_sample(struct mpu6050_sample_t *sample);
 
 #endif
