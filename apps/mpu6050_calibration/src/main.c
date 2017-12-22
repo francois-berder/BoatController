@@ -88,6 +88,8 @@
 #define SCK_PIN         (GPIO_PIN(PORT_B, 6))
 #define CS_PIN          (GPIO_PIN(PORT_B, 7))
 
+#define LED_PIN         (GPIO_PIN(PORT_B, 5))
+
 #ifndef SAMPLE_COUNT
 #define SAMPLE_COUNT    (128U)
 #endif
@@ -324,6 +326,9 @@ int main(void)
     timer1_power_up();
     timer1_configure(TIMER1_PRESCALER_1, 4000, 1);
     timer1_start();
+
+    /* Turn on LED pin */
+    gpio_init_out(LED_PIN, 1);
 
     /* Configure uart */
     gpio_init_out(UART_TX_PIN, 1);
