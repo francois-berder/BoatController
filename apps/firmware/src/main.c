@@ -80,15 +80,19 @@
 #include "sdcard_cache/sdcard_cache.h"
 #include "status.h"
 
+/* Pins for UART interface */
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
+
+/* Pins for MPU6050 */
 #define I2C_SCL_PIN     (GPIO_PIN(PORT_B, 8))
 #define I2C_SDA_PIN     (GPIO_PIN(PORT_B, 9))
 
-#define MOSI_PIN            (GPIO_PIN(PORT_B, 13))
-#define MISO_PIN            (GPIO_PIN(PORT_B, 4))
-#define SCK_PIN             (GPIO_PIN(PORT_B, 6))
-#define CS_PIN              (GPIO_PIN(PORT_B, 7))   /* SD card CS pin */
+/* Pins for SD card */
+#define MOSI_PIN        (GPIO_PIN(PORT_B, 13))
+#define MISO_PIN        (GPIO_PIN(PORT_B, 4))
+#define SCK_PIN         (GPIO_PIN(PORT_B, 6))
+#define CS_PIN          (GPIO_PIN(PORT_B, 7))
 
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "dev"
