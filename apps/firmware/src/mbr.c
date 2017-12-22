@@ -19,9 +19,9 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "block_storage.h"
 #include "mbr.h"
 #include "sdcard/sdcard.h"
+#include "sdcard_cache/sdcard_cache.h"
 
 #define BOOT_SIGNATURE          (0xAA55)
 #define BOOTSTRAP_CODE_SIZE     (446U)
@@ -52,9 +52,9 @@ void mbr_read_partition_table(void)
     uint16_t boot_sig;
 
     /* Skip boostrap code */
-    block_storage_seek(BOOTSTRAP_CODE_SIZE);
+    sdcard_cache_seek(BOOTSTRAP_CODE_SIZE);
 
-    block_storage_read(partition_table, PARTITION_TABLE_SIZE);
+    sdcard_cache_read(partition_table, PARTITION_TABLE_SIZE);
     for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
         uint8_t *entry = &partition_table[i * PARTITION_ENTRY_SIZE];
 
@@ -66,7 +66,7 @@ void mbr_read_partition_table(void)
     }
 
     /* Check boot signature */
-    block_storage_read(&boot_sig, sizeof(boot_sig));
+    sdcard_cache_read(&boot_sig, sizeof(boot_sig));
     if (boot_sig != BOOT_SIGNATURE)
         printf("Invalid boot signature in MBR\n");
 }

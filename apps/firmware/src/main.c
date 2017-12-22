@@ -62,7 +62,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <xc.h>
-#include "block_storage.h"
 #include "config.h"
 #include "controller.h"
 #include "fat16/fat16.h"
@@ -78,6 +77,7 @@
 #include "periph_conf.h"
 #include "radio.h"
 #include "sdcard/sdcard.h"
+#include "sdcard_cache/sdcard_cache.h"
 #include "status.h"
 
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
@@ -99,10 +99,10 @@ static const char *welcome_msg = "Boat Controller firmware " FIRMWARE_VERSION
                                  "\n";
 
 static struct storage_dev_t dev = {
-    block_storage_read,
-    block_storage_read_byte,
-    block_storage_write,
-    block_storage_seek
+    sdcard_cache_read,
+    sdcard_cache_read_byte,
+    sdcard_cache_write,
+    sdcard_cache_seek
 };
 
 static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
@@ -292,7 +292,7 @@ int main(void)
 
     if (config.sdcard_enabled) {
         printf("Configuring block storage...");
-        block_storage_init(sdcard_dev);
+        sdcard_cache_init(sdcard_dev);
         printf("done\n");
 
         printf("Reading MBR...");

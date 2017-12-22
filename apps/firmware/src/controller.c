@@ -18,7 +18,6 @@
  */
 
 #include <stdio.h>
-#include "block_storage.h"
 #include "controller.h"
 #include "fat16/fat16.h"
 #include "mpu6050_fifo/mpu6050_fifo.h"
@@ -26,6 +25,7 @@
 #include "output.h"
 #include "periph/crypto.h"
 #include "radio.h"
+#include "sdcard_cache/sdcard_cache.h"
 
 static int fd = -1;
 
@@ -57,10 +57,10 @@ static void open_log_file(void)
     }
 
     /*
-        * Flush cache now to ensure that file will exist on the SD card
-        * even if no radio frames are found later.
-        */
-    block_storage_flush();
+     * Flush cache now to ensure that file will exist on the SD card
+     * even if no radio frames are found later.
+     */
+    sdcard_cache_flush();
 }
 
 static void log_frame(struct radio_frame_t rf, struct output_frame_t of)
@@ -111,7 +111,7 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
             counter += 5;
             if (counter >= 2000) {
                 counter = 0;
-                block_storage_flush();
+                sdcard_cache_flush();
             }
         }
     }
