@@ -323,8 +323,6 @@ int main(void)
     else {
         printf("failed\n");
         config.sdcard_enabled = 0;
-        spi_disable(SPI_1);
-        spi_power_down(SPI_1);
     }
 
     if (config.sdcard_enabled) {
@@ -340,6 +338,11 @@ int main(void)
         } else {
             config.sdcard_enabled = 0;
         }
+    }
+
+    if (!config.sdcard_enabled) {
+        spi_disable(SPI_1);
+        spi_power_down(SPI_1);
     }
 
     /* Attempt to retrieve calibration data for MPU6050 from SD card */
