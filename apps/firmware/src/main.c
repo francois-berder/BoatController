@@ -318,9 +318,21 @@ int main(void)
 
     sdcard_dev.spi_num = SPI_1;
     sdcard_dev.cs_pin = CS_PIN;
-    if (!sdcard_init(&sdcard_dev))
+    if (!sdcard_init(&sdcard_dev)) {
+        /*
+        * Increase clock frequency:
+        *  - Use system clock for SPI module
+        *  - Set BRG to 0
+        */
+        PMD4 &= ~_PMD4_REFOMD_MASK;
+        REFOCONL = _REFOCONL_ROEN_MASK;
+        spi_disable(SPI_1);
+        SPI1BRGL = 0;
+        SPI1CON1 |= _SPI1CON1_MCLKEN_MASK;
+        spi_enable(SPI_1);
+
         printf("done\n");
-    else {
+    } else {
         printf("failed\n");
         config.sdcard_enabled = 0;
     }
