@@ -283,7 +283,7 @@ int main(void)
         for (i = 0; i < sample_count; ++i) {
             char buffer[128];
             struct mpu6050_sample_t sample;
-
+            mpu6050_fifo_get_sample(&sample);
             sprintf(buffer, "%d, %d, %d, %d, %d, %d\n", sample.accel.x, sample.accel.y, sample.accel.z,
                                                         sample.gyro.x, sample.gyro.y, sample.gyro.z);
             fat16_write(fd, buffer, strlen(buffer));
