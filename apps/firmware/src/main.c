@@ -350,7 +350,7 @@ int main(void)
 
     if (config.sdcard_enabled) {
         uint32_t partition_offset;
-        printf("Configuring block storage...");
+        printf("Configuring SD card cache...");
         sdcard_cache_init(sdcard_dev);
         printf("done\n");
 
