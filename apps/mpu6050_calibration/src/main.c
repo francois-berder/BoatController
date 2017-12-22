@@ -66,8 +66,9 @@
 #include "fat16/fat16.h"
 #include "mbr.h"
 #include "mcu.h"
-#include "mpu6050.h"
+#include "mpu6050/mpu6050.h"
 #include "periph/gpio.h"
+#include "periph/i2c.h"
 #include "periph/timer1.h"
 #include "periph/uart.h"
 #include "periph_conf.h"
@@ -75,6 +76,10 @@
 
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
+
+/* Pins for MPU6050 */
+#define I2C_SCL_PIN     (GPIO_PIN(PORT_B, 8))
+#define I2C_SDA_PIN     (GPIO_PIN(PORT_B, 9))
 
 #ifndef SAMPLE_COUNT
 #define SAMPLE_COUNT    (128U)
@@ -88,6 +93,7 @@ static const char *welcome_msg = "Boat Controller firmware " FIRMWARE_VERSION
                                  " - " __DATE__ " " __TIME__
                                  "\n";
 
+static struct mpu6050_dev_t mpu6050_dev;
 static struct storage_dev_t dev = {
     block_storage_read,
     block_storage_read_byte,
@@ -123,10 +129,7 @@ static void wait_for_user(void)
         char buffer[128];
         struct mpu6050_sample_t raw_sample;
 
-        mpu6050_clear_samples();
-        while (mpu6050_get_sample_count() == 0)
-            ;
-        mpu6050_get_sample(&raw_sample);
+        mpu6050_get_acc(&mpu6050_dev, &raw_sample);
         sprintf(buffer,
                 "\rPress enter to continue, (%d, %d, %d)\n",
                 raw_sample.accel.x, raw_sample.accel.y, raw_sample.accel.z);
@@ -142,12 +145,10 @@ static void compute_avg(int16_t *ax, int16_t *ay, int16_t *az)
     uint64_t avg[3] = {0, 0, 0};
 
     printf("Retrieving %u samples", SAMPLE_COUNT);
-    mpu6050_clear_samples();
     for (i = 0; i < SAMPLE_COUNT; ++i) {
         printf(".");
-        while (mpu6050_get_sample_count() == 0)
-            ;
-        mpu6050_get_sample(&samples[i]);
+        mpu6050_get_acc(&mpu6050_dev, &samples[i]);
+        mcu_delay(10);
     }
     printf("\n");
 
@@ -295,9 +296,26 @@ int main(void)
 
     printf(welcome_msg);
 
+    /* Prepare MPU6050 device */
+    mpu6050_dev.i2c_num = I2C_1;
+    mpu6050_dev.cdata.accel.offset.x = 0;
+    mpu6050_dev.cdata.accel.offset.y = 0;
+    mpu6050_dev.cdata.accel.offset.z = 0;
+    mpu6050_dev.cdata.accel.coeff.x = 16;
+    mpu6050_dev.cdata.accel.coeff.y = 16;
+    mpu6050_dev.cdata.accel.coeff.z = 16;
+    mpu6050_dev.cdata.gyro.offset.x = 0;
+    mpu6050_dev.cdata.gyro.offset.y = 0;
+    mpu6050_dev.cdata.gyro.offset.z = 0;
+
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
-    if (!mpu6050_init())
+    gpio_init_out(I2C_SCL_PIN, 1);
+    gpio_init_out(I2C_SDA_PIN, 1);
+    i2c_power_up(I2C_1);
+    i2c_configure(I2C_1, I2C_FAST_SPEED);
+    i2c_enable(I2C_1);
+    if (!mpu6050_init(&mpu6050_dev, 1, 1))
         printf("done\n");
     else
         stop("Failed to initialise MPU6050");
@@ -361,10 +379,7 @@ int main(void)
         struct mpu6050_sample_t raw_sample;
         int16_t ax, ay, az;
 
-        mpu6050_clear_samples();
-        while (mpu6050_get_sample_count() == 0)
-            ;
-        mpu6050_get_sample(&raw_sample);
+        mpu6050_get_acc(&mpu6050_dev, &raw_sample);
 
         {
             int32_t x;
