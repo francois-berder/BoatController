@@ -71,6 +71,7 @@
 #include "mpu6050/mpu6050.h"
 #include "output.h"
 #include "periph/gpio.h"
+#include "periph/i2c.h"
 #include "periph/timer1.h"
 #include "periph/uart.h"
 #include "periph_conf.h"
@@ -80,6 +81,8 @@
 
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
+#define I2C_SCL_PIN     (GPIO_PIN(PORT_B, 8))
+#define I2C_SDA_PIN     (GPIO_PIN(PORT_B, 9))
 
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "dev"
@@ -240,12 +243,19 @@ int main(void)
 
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
+    gpio_init_out(I2C_SCL_PIN, 1);
+    gpio_init_out(I2C_SDA_PIN, 1);
+    i2c_power_up(I2C_1);
+    i2c_configure(I2C_1, I2C_FAST_SPEED);
+    i2c_enable(I2C_1);
     imu_dev.i2c_num = I2C_1;
     if (!mpu6050_init(&imu_dev, 1, 1)) {
         printf("done\n");
     } else {
         printf("failed\n");
         config.mpu6050_enabled = 0;
+        i2c_disable(I2C_1);
+        i2c_power_down(I2C_1);
     }
 
     /* Configure SD card */
