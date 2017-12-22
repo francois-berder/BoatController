@@ -84,6 +84,11 @@
 #define I2C_SCL_PIN     (GPIO_PIN(PORT_B, 8))
 #define I2C_SDA_PIN     (GPIO_PIN(PORT_B, 9))
 
+#define MOSI_PIN            (GPIO_PIN(PORT_B, 13))
+#define MISO_PIN            (GPIO_PIN(PORT_B, 4))
+#define SCK_PIN             (GPIO_PIN(PORT_B, 6))
+#define CS_PIN              (GPIO_PIN(PORT_B, 7))   /* SD card CS pin */
+
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "dev"
 #endif
@@ -260,11 +265,25 @@ int main(void)
 
     /* Configure SD card */
     printf("Configuring SD card...");
+    gpio_init_out(MOSI_PIN, 0);
+    gpio_init_in(MISO_PIN);
+    gpio_init_out(SCK_PIN, 0);
+    gpio_init_out(CS_PIN, 1);
+
+    RPOR6bits.RP13R = 0x0007;
+    RPINR20bits.SDI1R = 0x0004;
+    RPOR3bits.RP6R = 0x0008;
+
+    spi_power_up(SPI_1);
+    spi_enable(SPI_1);
+
     if (!sdcard_init())
         printf("done\n");
     else {
         printf("failed\n");
         config.sdcard_enabled = 0;
+        spi_disable(SPI_1);
+        spi_power_down(SPI_1);
     }
 
     if (config.sdcard_enabled) {

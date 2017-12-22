@@ -25,11 +25,6 @@
 #include "periph_conf.h"
 #include "sdcard.h"
 
-#define MOSI_PIN            (GPIO_PIN(PORT_B, 13))
-#define MISO_PIN            (GPIO_PIN(PORT_B, 4))
-#define SCK_PIN             (GPIO_PIN(PORT_B, 6))
-#define CS_PIN              (GPIO_PIN(PORT_B, 7))
-
 #define INIT_ATTEMPT_COUNT_MAX          (100)
 #define RESPONSE_ATTEMPT_COUNT_MAX      (128)
 #define DATA_START_TOKEN                (0xFE)
@@ -189,18 +184,6 @@ int sdcard_init(void)
     uint8_t is_sdhc = 0;
     int ret;
 
-    gpio_init_out(MOSI_PIN, 0);
-    gpio_init_in(MISO_PIN);
-    gpio_init_out(SCK_PIN, 0);
-    gpio_init_out(CS_PIN, 1);
-
-    RPOR6bits.RP13R = 0x0007;
-    RPINR20bits.SDI1R = 0x0004;
-    RPOR3bits.RP6R = 0x0008;
-
-    spi_power_up(SPI_1);
-    spi_configure(SPI_1, 400000, SPI_MODE_0);
-    spi_enable(SPI_1);
 
     /* Send 160 clock cycles */
     spi_transfer(SPI_1, NULL, NULL, 20);
