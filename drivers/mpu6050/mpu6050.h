@@ -35,59 +35,88 @@ struct mpu6050_sample_t {
     } gyro;
 };
 
+struct mpu6050_calibration_data_t {
+    struct {
+        struct {
+            int16_t x;
+            int16_t y;
+            int16_t z;
+        } offset;
+
+        struct {
+            int16_t x;
+            int16_t y;
+            int16_t z;
+        } coeff;
+    } accel;
+
+    struct {
+        struct {
+            int16_t x;
+            int16_t y;
+            int16_t z;
+        } offset;
+    } gyro;
+};
+
+struct mpu6050_dev_t {
+    unsigned int i2c_num;
+    struct mpu6050_calibration_data_t cdata;
+};
+
 /**
  * @brief Initialise MPU6050
  *
  * I2C must have been initialised and GPIO pins configured as digital I/O.
  *
- * @param[in] i2c_num
+ * @param[in] dev
  * @param[in] enable_acc 0 to disable accelerometer, 1 to enable it
  * @param[in] enable_gyro 0 to disable gyroscope, 1 to enable it
  */
-int mpu6050_init(unsigned int i2c_num, unsigned int enable_acc, unsigned int enable_gyro);
+int mpu6050_init(struct mpu6050_dev_t *dev, unsigned int enable_acc, unsigned int enable_gyro);
 
 /**
  * @brief Get accelerometer and gyroscope readings from the MPU6050
  *
  * mpu6050_init must have been called before.
  *
- * @param[in] i2c_num
+ * @param[in] dev
  * @param[out] sample
  */
-void mpu6050_get_acc_gyro(unsigned int i2c_num, struct mpu6050_sample_t *sample);
+void mpu6050_get_acc_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
 
 /**
  * @brief Get accelerometer readings from the MPU6050
  *
  * mpu6050_init must have been called before.
  *
- * @param[in] i2c_num
+ * @param[in] dev
  * @param[out] sample Only accelerometer data will be valid
  */
-void mpu6050_get_acc(unsigned int i2c_num, struct mpu6050_sample_t *sample);
+void mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
 
 /**
  * @brief Get gyroscope readings from the MPU6050
  *
  * mpu6050_init must have been called before.
  *
- * @param[in] i2c_num
+ * @param[in] dev
  * @param[out] sample Only gyroscope data will be valid
  */
-void mpu6050_get_gyro(unsigned int i2c_num, struct mpu6050_sample_t *sample);
+void mpu6050_get_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
 
 /**
  * @brief Power up MPU6050
  *
- * @param[in] i2c_num
+ * @param[in] dev
  */
-void mpu6050_power_up(unsigned int i2c_num);
+void mpu6050_power_up(struct mpu6050_dev_t *dev);
 
 /**
  * @brief Power down MPU6050
  *
- * @param[in] i2c_num
+ * @param[in] dev
  */
-void mpu6050_power_down(unsigned int i2c_num);
+void mpu6050_power_down(struct mpu6050_dev_t *dev);
 
 #endif
