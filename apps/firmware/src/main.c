@@ -77,7 +77,7 @@
 #include "periph/uart.h"
 #include "periph_conf.h"
 #include "radio.h"
-#include "sdcard.h"
+#include "sdcard/sdcard.h"
 #include "status.h"
 
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))

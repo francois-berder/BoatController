@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include "block_storage.h"
 #include "mbr.h"
-#include "sdcard.h"
+#include "sdcard/sdcard.h"
 
 #define BOOT_SIGNATURE          (0xAA55)
 #define BOOTSTRAP_CODE_SIZE     (446U)

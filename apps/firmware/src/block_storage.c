@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include "block_storage.h"
-#include "sdcard.h"
+#include "sdcard/sdcard.h"
 
 #define CACHE_ENTRY_COUNT           (8U)
 #define CACHE_ENTRY_VALID_FLAG      (0x8000)

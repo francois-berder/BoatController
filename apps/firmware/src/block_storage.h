@@ -21,7 +21,7 @@
 #define __BLOCK_STORAGE_H__
 
 #include <stdint.h>
-#include "sdcard.h"
+#include "sdcard/sdcard.h"
 
 /**
  * @brief Initialise block storage
