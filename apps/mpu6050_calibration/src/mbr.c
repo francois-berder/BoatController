@@ -18,9 +18,9 @@
  */
 
  #include <stdint.h>
-#include "block_storage.h"
 #include "mbr.h"
-#include "sdcard.h"
+#include "sdcard/sdcard.h"
+#include "sdcard_cache/sdcard_cache.h"
 
 #define BOOTSTRAP_CODE_SIZE     (446U)
 #define PARTITION_ENTRY_SIZE    (16U)
@@ -49,9 +49,9 @@ void mbr_read_partition_table(void)
     uint8_t partition_table[PARTITION_TABLE_SIZE];
 
     /* Skip boostrap code */
-    block_storage_seek(BOOTSTRAP_CODE_SIZE);
+    sdcard_cache_seek(BOOTSTRAP_CODE_SIZE);
 
-    block_storage_read(partition_table, PARTITION_TABLE_SIZE);
+    sdcard_cache_read(partition_table, PARTITION_TABLE_SIZE);
     for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
         uint8_t *entry = &partition_table[i * PARTITION_ENTRY_SIZE];
 

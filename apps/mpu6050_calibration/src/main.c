@@ -62,17 +62,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <xc.h>
-#include "block_storage.h"
 #include "fat16/fat16.h"
 #include "mbr.h"
 #include "mcu.h"
 #include "mpu6050/mpu6050.h"
 #include "periph/gpio.h"
 #include "periph/i2c.h"
+#include "periph/spi.h"
 #include "periph/timer1.h"
 #include "periph/uart.h"
 #include "periph_conf.h"
-#include "sdcard.h"
+#include "sdcard/sdcard.h"
+#include "sdcard_cache/sdcard_cache.h"
 
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
@@ -80,6 +81,12 @@
 /* Pins for MPU6050 */
 #define I2C_SCL_PIN     (GPIO_PIN(PORT_B, 8))
 #define I2C_SDA_PIN     (GPIO_PIN(PORT_B, 9))
+
+/* Pins for SD card */
+#define MOSI_PIN        (GPIO_PIN(PORT_B, 13))
+#define MISO_PIN        (GPIO_PIN(PORT_B, 4))
+#define SCK_PIN         (GPIO_PIN(PORT_B, 6))
+#define CS_PIN          (GPIO_PIN(PORT_B, 7))
 
 #ifndef SAMPLE_COUNT
 #define SAMPLE_COUNT    (128U)
@@ -95,10 +102,10 @@ static const char *welcome_msg = "Boat Controller firmware " FIRMWARE_VERSION
 
 static struct mpu6050_dev_t mpu6050_dev;
 static struct storage_dev_t dev = {
-    block_storage_read,
-    block_storage_read_byte,
-    block_storage_write,
-    block_storage_seek
+    sdcard_cache_read,
+    sdcard_cache_read_byte,
+    sdcard_cache_write,
+    sdcard_cache_seek
 };
 
 struct calibration_data {
@@ -120,6 +127,41 @@ static void stop(const char *reason)
     printf("\n%s\n", reason);
     while (1)
         ;
+}
+
+/**
+ * @brief Try to find a FAT16 partition on the SD card
+ *
+ * @return First sector of the FAT16 partition, 0 if no
+ *         partition was found.
+ */
+static uint32_t find_fat16_partition(void)
+{
+
+    unsigned int i;
+    uint32_t first_sector = 0;
+
+    printf("Reading MBR...");
+    mbr_read_partition_table();
+    printf("done\n");
+
+    printf("Looking for a FAT16 partition...\n");
+    for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
+        struct partition_info_t p = mbr_get_partition_info(i);
+        if ((p.status == BOOTABLE_PARTITION || p.status == INACTIVE_PARTITION)
+        &&  p.type == FAT16_PARTITION_TYPE) {
+            uint32_t size_100kB = p.size / 100000; /* size in 100kB unit */
+            printf("Found FAT16 partition at entry %u\n", i);
+            printf("\tstart_sector: %lu\n", p.start_sector);
+            printf("\tsize: %lu bytes (%lu.%lu MB)\n", p.size, size_100kB / 10, size_100kB % 10);
+            first_sector = p.start_sector;
+            break;
+        }
+    }
+    if (i == PARTITION_ENTRY_COUNT)
+        printf("Failed to found a FAT16 partition\n");
+
+    return first_sector;
 }
 
 static void wait_for_user(void)
@@ -252,16 +294,15 @@ static void save_calibration_data(void)
     }
 
     fat16_close(fd);
-    block_storage_flush();
+    sdcard_cache_flush();
     printf("done\n");
 }
 
 
 int main(void)
 {
-    unsigned int i;
-    struct partition_info_t p;
     int16_t raw_accel[9];
+    struct sdcard_spi_dev_t sdcard_dev;
 
     mcu_set_system_clock(8000000LU);
 
@@ -322,38 +363,51 @@ int main(void)
 
     /* Configure SD card */
     printf("Configuring SD card...");
-    if (!sdcard_init())
+    gpio_init_out(MOSI_PIN, 0);
+    gpio_init_in(MISO_PIN);
+    gpio_init_out(SCK_PIN, 0);
+    gpio_init_out(CS_PIN, 1);
+
+    RPOR6bits.RP13R = 0x0007;
+    RPINR20bits.SDI1R = 0x0004;
+    RPOR3bits.RP6R = 0x0008;
+
+    spi_power_up(SPI_1);
+    spi_enable(SPI_1);
+
+    sdcard_dev.spi_num = SPI_1;
+    sdcard_dev.cs_pin = CS_PIN;
+    if (!sdcard_init(&sdcard_dev)) {
+        /*
+         * Increase clock frequency:
+         *  - Use system clock for SPI module
+         *  - Set BRG to 0
+         */
+        PMD4 &= ~_PMD4_REFOMD_MASK;
+        REFOCONL = _REFOCONL_ROEN_MASK;
+        spi_disable(SPI_1);
+        SPI1BRGL = 0;
+        SPI1CON1 |= _SPI1CON1_MCLKEN_MASK;
+        spi_enable(SPI_1);
+
         printf("done\n");
-    else
+    } else {
         stop("Failed to configure SD card");
-
-    printf("Configuring block storage...");
-    block_storage_init();
-    printf("done\n");
-
-    printf("Reading MBR...");
-    mbr_read_partition_table();
-    printf("done\n");
-
-    printf("Looking for a FAT16 partition...\n");
-    for (i = 0; i < PARTITION_ENTRY_COUNT; ++i) {
-        p = mbr_get_partition_info(i);
-        if ((p.status == BOOTABLE_PARTITION || p.status == INACTIVE_PARTITION)
-        &&  p.type == FAT16_PARTITION_TYPE) {
-            uint32_t size_100kB = p.size / 100000; /* size in 100kB unit */
-            printf("Found FAT16 partition at entry %u\n", i);
-            printf("\tstart_sector: %lu\n", p.start_sector);
-            printf("\tsize: %lu bytes (%lu.%lu MB)\n", p.size, size_100kB / 10, size_100kB % 10);
-            break;
-        }
     }
-    if (i == PARTITION_ENTRY_COUNT)
-        stop("Failed to found a FAT16 partition");
+
+    printf("Configuring SD card cache...");
+    sdcard_cache_init(sdcard_dev);
+    printf("done\n");
+
 
     {
-        uint32_t partition_offset = p.start_sector;
-        partition_offset <<= 9;         /* sector size is 512 bytes */
-        fat16_init(dev, partition_offset);
+        uint32_t partition_offset = find_fat16_partition();
+        if (partition_offset > 0) {
+            partition_offset <<= 9;
+            fat16_init(dev, partition_offset);
+        } else {
+            stop("Failed to find a FAT16 partition");
+        }
     }
 
     printf("Initialisation finished\n");
