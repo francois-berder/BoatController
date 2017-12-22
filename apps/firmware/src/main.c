@@ -65,7 +65,7 @@
 #include "config.h"
 #include "controller.h"
 #include "fat16/fat16.h"
-#include "mbr.h"
+#include "mbr/mbr.h"
 #include "mcu.h"
 #include "mpu6050/mpu6050.h"
 #include "output.h"
@@ -115,14 +115,13 @@ static struct storage_dev_t dev = {
  * @return First sector of the FAT16 partition, 0 if no
  *         partition was found.
  */
-static uint32_t find_fat16_partition(void)
+static uint32_t find_fat16_partition(struct sdcard_spi_dev_t *dev)
 {
-
     unsigned int i;
     uint32_t first_sector = 0;
 
     printf("Reading MBR...");
-    mbr_read_partition_table();
+    mbr_read_partition_table(dev);
     printf("done\n");
 
     printf("Looking for a FAT16 partition...\n");
@@ -354,7 +353,7 @@ int main(void)
         sdcard_cache_init(sdcard_dev);
         printf("done\n");
 
-        partition_offset = find_fat16_partition();
+        partition_offset = find_fat16_partition(&sdcard_dev);
         if (partition_offset > 0) {
             partition_offset <<= 9;
             fat16_init(dev, partition_offset);
