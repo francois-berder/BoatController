@@ -288,6 +288,23 @@ static void save_calibration_data(void)
         }
     }
 
+    /* Save calibration data for the gyroscope */
+    {
+        char buffer[128];
+        unsigned int len;
+        int ret;
+
+        sprintf(buffer, "%d, %d, %d\n",
+                cdata.gyro.offset.x, cdata.gyro.offset.y, cdata.gyro.offset.z);
+        len = strlen(buffer);
+        ret = fat16_write(fd, buffer, len);
+        if (ret < 0 || (unsigned int)ret != len) {
+            fat16_close(fd);
+            printf("failed\n");
+            return;
+        }
+    }
+
     fat16_close(fd);
     sdcard_cache_flush();
     printf("done\n");
