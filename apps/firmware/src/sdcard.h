@@ -24,29 +24,37 @@
 
 #define SDCARD_BLOCK_LENGTH     (512LU)
 
+struct sdcard_spi_dev_t {
+    unsigned int spi_num;
+    unsigned int cs_pin;
+};
+
 /**
  * @brief Initialise SD card
  *
+ * @param[in] dev
  * @return 0 if successful, -1 otherwise
  */
-int sdcard_init(void);
+int sdcard_init(struct sdcard_spi_dev_t *dev);
 
 /**
  * @brief Read block from sector
  *
+ * @param[in] dev
  * @param[in] block Array of bytes at least greater or equal than block length
  * @param[in] sector
  * @return 0 if successful, -1 otherwise
  */
-int sdcard_read_block(void *block, uint32_t sector);
+int sdcard_read_block(struct sdcard_spi_dev_t *dev, void *block, uint32_t sector);
 
 /**
  * @brief Write block to sector
  *
+ * @param[in] dev
  * @param[in] block Array of bytes at least greater or equal than block length
  * @param[in] sector
  * @return 0 if successful, -1 otherwise
  */
-int sdcard_write_block(const void *block, uint32_t sector);
+int sdcard_write_block(struct sdcard_spi_dev_t *dev, const void *block, uint32_t sector);
 
 #endif

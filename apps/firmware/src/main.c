@@ -72,6 +72,7 @@
 #include "output.h"
 #include "periph/gpio.h"
 #include "periph/i2c.h"
+#include "periph/spi.h"
 #include "periph/timer1.h"
 #include "periph/uart.h"
 #include "periph_conf.h"
@@ -199,6 +200,7 @@ int main(void)
     unsigned int i;
     struct partition_info_t p;
     struct mpu6050_dev_t imu_dev;
+    struct sdcard_spi_dev_t sdcard_dev;
 
     mcu_set_system_clock(8000000LU);
 
@@ -277,7 +279,9 @@ int main(void)
     spi_power_up(SPI_1);
     spi_enable(SPI_1);
 
-    if (!sdcard_init())
+    sdcard_dev.spi_num = SPI_1;
+    sdcard_dev.cs_pin = CS_PIN;
+    if (!sdcard_init(&sdcard_dev))
         printf("done\n");
     else {
         printf("failed\n");
@@ -288,7 +292,7 @@ int main(void)
 
     if (config.sdcard_enabled) {
         printf("Configuring block storage...");
-        block_storage_init();
+        block_storage_init(sdcard_dev);
         printf("done\n");
 
         printf("Reading MBR...");

@@ -21,6 +21,7 @@
 #define __BLOCK_STORAGE_H__
 
 #include <stdint.h>
+#include "sdcard.h"
 
 /**
  * @brief Initialise block storage
@@ -29,7 +30,7 @@
  * that it has already been done before.
  * The current address is set to 0.
  */
-void block_storage_init(void);
+void block_storage_init(struct sdcard_spi_dev_t dev);
 
 /**
  * @brief Read bytes from block storage at current address

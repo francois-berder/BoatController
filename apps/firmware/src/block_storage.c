@@ -26,6 +26,7 @@
 #define CACHE_ENTRY_DIRTY_FLAG      (0x4000)
 #define CACHE_ENTRY_COUNTER_MASK    (0x3FFF)
 
+static struct sdcard_spi_dev_t dev;
 struct cache_entry_t {
     uint16_t status;            /**< [15..14]: valid & dirty flags, [0..13]: 14bit saturating counter */
     uint32_t sector;            /**< sector index */
@@ -73,20 +74,22 @@ static unsigned int load_block(void)
         }
 
         if (cache[cache_index].status & CACHE_ENTRY_DIRTY_FLAG)
-            sdcard_write_block(cache[cache_index].block, cache[cache_index].sector);
+            sdcard_write_block(&dev, cache[cache_index].block, cache[cache_index].sector);
     }
 
     /* Initialise cache entry */
     cache[cache_index].status = CACHE_ENTRY_VALID_FLAG;
     cache[cache_index].sector = sector;
-    sdcard_read_block(cache[cache_index].block, sector);
+    sdcard_read_block(&dev, cache[cache_index].block, sector);
 
     return cache_index;
 }
 
-void block_storage_init(void)
+void block_storage_init(struct sdcard_spi_dev_t _dev)
 {
     unsigned int i;
+
+    dev = _dev;
 
     /* Mark all entries as invalid */
     for (i = 0; i < CACHE_ENTRY_COUNT; ++i)
@@ -163,7 +166,7 @@ void block_storage_flush(void)
     for (i = 0; i < CACHE_ENTRY_COUNT; ++i) {
         if (cache[i].status & CACHE_ENTRY_VALID_FLAG
         &&  cache[i].status & CACHE_ENTRY_DIRTY_FLAG) {
-            sdcard_write_block(cache[i].block, cache[i].sector);
+            sdcard_write_block(&dev, cache[i].block, cache[i].sector);
             cache[i].status &= ~CACHE_ENTRY_DIRTY_FLAG;
         }
     }
