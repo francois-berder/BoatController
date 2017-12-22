@@ -111,19 +111,7 @@ static struct storage_dev_t dev = {
     sdcard_cache_seek
 };
 
-struct calibration_data {
-    struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-    } offset;
-    struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-    } coeff;
-};
-static struct calibration_data cdata;
+static struct mpu6050_calibration_data_t cdata;
 
 static void stop(const char *reason)
 {
@@ -225,23 +213,23 @@ static void compute_calibration_data(int16_t *raw_accel)
 
     x = raw_accel[0];
     x2 = raw_accel[6];
-    cdata.coeff.x = 131072L / (x2 - x);
-    cdata.offset.x = - cdata.coeff.x * x;
+    cdata.accel.coeff.x = 131072L / (x2 - x);
+    cdata.accel.offset.x = - cdata.accel.coeff.x * x;
 
     y = raw_accel[1];
     y2 = raw_accel[4];
-    cdata.coeff.y = 131072L / (y2 - y);
-    cdata.offset.y = - cdata.coeff.y * y;
+    cdata.accel.coeff.y = 131072L / (y2 - y);
+    cdata.accel.offset.y = - cdata.accel.coeff.y * y;
 
     z = raw_accel[8];
     z2 = raw_accel[2];
-    cdata.coeff.z = 131072L / (z2 - z);
-    cdata.offset.z = - cdata.coeff.z * z;
+    cdata.accel.coeff.z = 131072L / (z2 - z);
+    cdata.accel.offset.z = - cdata.accel.coeff.z * z;
 
     printf("Calibration data:\n");
-    printf("coeff x = %d, offset x = %d\n", cdata.coeff.x, cdata.offset.x);
-    printf("coeff y = %d, offset y = %d\n", cdata.coeff.y, cdata.offset.y);
-    printf("coeff z = %d, offset z = %d\n", cdata.coeff.z, cdata.offset.z);
+    printf("coeff x = %d, offset x = %d\n", cdata.accel.coeff.x, cdata.accel.offset.x);
+    printf("coeff y = %d, offset y = %d\n", cdata.accel.coeff.y, cdata.accel.offset.y);
+    printf("coeff z = %d, offset z = %d\n", cdata.accel.coeff.z, cdata.accel.offset.z);
 }
 
 static void save_calibration_data(void)
@@ -260,7 +248,7 @@ static void save_calibration_data(void)
         unsigned int len;
         int ret;
 
-        sprintf(buffer, "%d, 0, 0, %d\n", cdata.coeff.x, cdata.offset.x);
+        sprintf(buffer, "%d, 0, 0, %d\n", cdata.accel.coeff.x, cdata.accel.offset.x);
         len = strlen(buffer);
         ret = fat16_write(fd, buffer, len);
         if (ret < 0 || (unsigned int)ret != len) {
@@ -275,7 +263,7 @@ static void save_calibration_data(void)
         unsigned int len;
         int ret;
 
-        sprintf(buffer, "0, %d, 0, %d\n", cdata.coeff.y, cdata.offset.y);
+        sprintf(buffer, "0, %d, 0, %d\n", cdata.accel.coeff.y, cdata.accel.offset.y);
         len = strlen(buffer);
         ret = fat16_write(fd, buffer, len);
         if (ret < 0 || (unsigned int)ret != len) {
@@ -290,7 +278,7 @@ static void save_calibration_data(void)
         unsigned int len;
         int ret;
 
-        sprintf(buffer, "0, 0, %d, %d\n", cdata.coeff.z, cdata.offset.z);
+        sprintf(buffer, "0, 0, %d, %d\n", cdata.accel.coeff.z, cdata.accel.offset.z);
         len = strlen(buffer);
         ret = fat16_write(fd, buffer, len);
         if (ret < 0 || (unsigned int)ret != len) {
@@ -460,23 +448,23 @@ int main(void)
             int32_t x;
             x = raw_sample.accel.x;
             x <<= 4;
-            x *= cdata.coeff.x;
+            x *= cdata.accel.coeff.x;
             x >>= 4;
-            x += cdata.offset.x;
+            x += cdata.accel.offset.x;
 
             int32_t y;
             y = raw_sample.accel.y;
             y <<= 4;
-            y *= cdata.coeff.y;
+            y *= cdata.accel.coeff.y;
             y >>= 4;
-            y += cdata.offset.y;
+            y += cdata.accel.offset.y;
 
             int32_t z;
             z = raw_sample.accel.z;
             z <<= 4;
-            z *= cdata.coeff.z;
+            z *= cdata.accel.coeff.z;
             z >>= 4;
-            z += cdata.offset.z;
+            z += cdata.accel.offset.z;
 
             ax = x >> 4;
             ay = y >> 4;
