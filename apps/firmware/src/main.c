@@ -285,6 +285,18 @@ int main(void)
     output_configure();
     printf("done\n");
 
+    /* Prepare MPU6050 device */
+    mpu6050_dev.i2c_num = I2C_1;
+    mpu6050_dev.cdata.accel.offset.x = 0;
+    mpu6050_dev.cdata.accel.offset.y = 0;
+    mpu6050_dev.cdata.accel.offset.z = 0;
+    mpu6050_dev.cdata.accel.coeff.x = 16;
+    mpu6050_dev.cdata.accel.coeff.y = 16;
+    mpu6050_dev.cdata.accel.coeff.z = 16;
+    mpu6050_dev.cdata.gyro.offset.x = 0;
+    mpu6050_dev.cdata.gyro.offset.y = 0;
+    mpu6050_dev.cdata.gyro.offset.z = 0;
+
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
     gpio_init_out(I2C_SCL_PIN, 1);
@@ -292,7 +304,6 @@ int main(void)
     i2c_power_up(I2C_1);
     i2c_configure(I2C_1, I2C_FAST_SPEED);
     i2c_enable(I2C_1);
-    mpu6050_dev.i2c_num = I2C_1;
     if (!mpu6050_init(&mpu6050_dev, 1, 1)) {
         printf("done\n");
     } else {
