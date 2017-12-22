@@ -21,7 +21,7 @@
 #include "block_storage.h"
 #include "controller.h"
 #include "fat16/fat16.h"
-#include "imu/imu.h"
+#include "mpu6050_fifo/mpu6050_fifo.h"
 #include "mcu.h"
 #include "output.h"
 #include "periph/crypto.h"
@@ -73,7 +73,7 @@ static void log_frame(struct radio_frame_t rf, struct output_frame_t of)
         fat16_write(fd, buffer, ret);
 }
 
-void controller_run(struct board_config_t config, struct mpu6050_dev_t imu_dev)
+void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev)
 {
     unsigned int counter = 0;
 
@@ -82,8 +82,8 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t imu_dev)
     }
 
     if (config.mpu6050_enabled) {
-        imu_init(imu_dev);
-        imu_start();
+        mpu6050_fifo_init(mpu6050_dev);
+        mpu6050_fifo_start();
     }
 
     while (1) {

@@ -199,7 +199,7 @@ int main(void)
     struct board_config_t config = {1, 1};
     unsigned int i;
     struct partition_info_t p;
-    struct mpu6050_dev_t imu_dev;
+    struct mpu6050_dev_t mpu6050_dev;
     struct sdcard_spi_dev_t sdcard_dev;
 
     mcu_set_system_clock(8000000LU);
@@ -255,8 +255,8 @@ int main(void)
     i2c_power_up(I2C_1);
     i2c_configure(I2C_1, I2C_FAST_SPEED);
     i2c_enable(I2C_1);
-    imu_dev.i2c_num = I2C_1;
-    if (!mpu6050_init(&imu_dev, 1, 1)) {
+    mpu6050_dev.i2c_num = I2C_1;
+    if (!mpu6050_init(&mpu6050_dev, 1, 1)) {
         printf("done\n");
     } else {
         printf("failed\n");
@@ -325,7 +325,7 @@ int main(void)
 
     /* Attempt to retrieve calibration data for MPU6050 from SD card */
     if (config.mpu6050_enabled && config.sdcard_enabled) {
-        if (load_calibration_data(&imu_dev.cdata) < 0)
+        if (load_calibration_data(&mpu6050_dev.cdata) < 0)
             printf("Failed to load calibration data from SD card.\n");
     }
 
@@ -342,7 +342,7 @@ int main(void)
         status_set_mode(STATUS_THREE_PER_2SEC);
 
     printf("Starting controller\n");
-    controller_run(config, imu_dev);
+    controller_run(config, mpu6050_dev);
 
     return 0;
 }

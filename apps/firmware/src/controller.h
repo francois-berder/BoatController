@@ -23,6 +23,6 @@
 #include "config.h"
 #include "mpu6050/mpu6050.h"
 
-void controller_run(struct board_config_t config, struct mpu6050_dev_t imu_dev);
+void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev);
 
 #endif
