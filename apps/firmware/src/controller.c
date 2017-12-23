@@ -31,10 +31,15 @@
 #define CONTROLLER_PERIOD_MS    (4)
 #endif
 
+#define NEUTRAL_POS     (6000)
+
 /* File descriptors */
 static int radio_fd = -1;
 static int output_fd = -1;
 static int mpu6050_fd = -1;
+
+static int16_t angular_speed_target = NEUTRAL_POS;
+static int16_t speed_target = NEUTRAL_POS;
 
 static void open_log_files(void)
 {
@@ -130,22 +135,20 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
     }
 
     while (1) {
-        /* Process all frames available from the radio */
-        if (radio_has_frame()) {
-            struct radio_frame_t radio_frame;
-            struct output_frame_t output_frame;
+        unsigned int update_output_frame = 0;
 
-            radio_frame = radio_get_frame();
-            output_frame.left_rudder = radio_frame.dir;
-            output_frame.right_rudder = radio_frame.dir;
-            output_frame.left_motor = radio_frame.speed;
-            output_frame.right_motor = radio_frame.speed;
-            output_set_frame(output_frame);
+        /* Process all frames available from the radio */
+        while (radio_has_frame()) {
+            struct radio_frame_t radio_frame = radio_get_frame();
+            angular_speed_target = radio_frame.dir;
+            speed_target = radio_frame.speed;
+            angular_speed_target -= NEUTRAL_POS;
+            speed_target -= NEUTRAL_POS;
+
+            update_output_frame = 1;
 
             if (radio_fd >= 0)
                 log_radio_frame(radio_frame);
-            if (output_fd >= 0)
-                log_output_frame(output_frame);
         }
 
         /* Process all samples available from MPU6050 FIFO */
@@ -155,6 +158,18 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
                 if (mpu6050_fd >= 0)
                     log_mpu6050_frame(s);
             }
+        }
+
+        if (update_output_frame) {
+            struct output_frame_t output_frame;
+            output_frame.left_rudder = angular_speed_target + NEUTRAL_POS;
+            output_frame.right_rudder = angular_speed_target + NEUTRAL_POS;
+            output_frame.left_motor = speed_target + NEUTRAL_POS;
+            output_frame.right_motor = speed_target + NEUTRAL_POS;
+            output_set_frame(output_frame);
+
+            if (output_fd >= 0)
+                log_output_frame(output_frame);
         }
 
         /* Ensure that logs are periodically saved to SD card */
