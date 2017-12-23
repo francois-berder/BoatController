@@ -478,6 +478,9 @@ int main(void)
     timer_power_down(TIMER_2);
     gpio_write(LED_PIN, 1);
 
+    /* Load new calibration data */
+    mpu6050_dev.cdata = cdata;
+
     while (1) {
         char buffer[128];
         struct mpu6050_sample_t raw_sample;
