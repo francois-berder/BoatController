@@ -27,9 +27,21 @@
 #endif
 
 static struct mpu6050_dev_t dev;
-static volatile struct mpu6050_sample_t samples[IMU_FIFO_DEPTH];
+static struct mpu6050_sample_t samples[IMU_FIFO_DEPTH];
 static volatile unsigned int sample_count;
 static volatile unsigned int fifo_start_index;
+
+void timer5_callback(void)
+{
+    unsigned int index;
+
+    if (sample_count >= IMU_FIFO_DEPTH)
+        return;
+
+    index = (fifo_start_index + sample_count) & (IMU_FIFO_DEPTH - 1);
+    mpu6050_get_acc_gyro(&dev, &samples[index]);
+    ++sample_count;
+}
 
 void mpu6050_fifo_init(struct mpu6050_dev_t _dev)
 {
