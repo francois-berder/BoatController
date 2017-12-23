@@ -186,51 +186,54 @@ static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
         beg = &buffer[i];
     }
     for (; i < len; ++i) {
-        if (buffer[i] == '\0') {
-            unsigned int j = i + 1;
-            unsigned int n = atoi(beg);
+        unsigned int j, n;
 
-            switch (num) {
-            case 0:
-                cdata->accel.coeff.x = n;
-                break;
-            case 2:
-                cdata->accel.offset.x = n;
-                break;
-            case 5:
-                cdata->accel.coeff.y = n;
-                break;
-            case 7:
-                cdata->accel.offset.y = n;
-                break;
-            case 10:
-                cdata->accel.coeff.z = n;
-                break;
-            case 11:
-                cdata->accel.offset.z = n;
-                break;
-            case 12:
-                cdata->gyro.offset.x = n;
-                break;
-            case 13:
-                cdata->gyro.offset.y = n;
-                break;
-            case 14:
-                cdata->gyro.offset.z = n;
-                break;
-            default:
-                break;
-            }
+        if (buffer[i] != '\0')
+            continue;
 
-            ++num;
+        j = i + 1;
+        n = atoi(beg);
 
+        switch (num) {
+        case 0:
+            cdata->accel.coeff.x = n;
+            break;
+        case 2:
+            cdata->accel.offset.x = n;
+            break;
+        case 5:
+            cdata->accel.coeff.y = n;
+            break;
+        case 7:
+            cdata->accel.offset.y = n;
+            break;
+        case 10:
+            cdata->accel.coeff.z = n;
+            break;
+        case 11:
+            cdata->accel.offset.z = n;
+            break;
+        case 12:
+            cdata->gyro.offset.x = n;
+            break;
+        case 13:
+            cdata->gyro.offset.y = n;
+            break;
+        case 14:
+            cdata->gyro.offset.z = n;
+            break;
+        default:
+            break;
+        }
+
+        ++num;
+
+        beg = &buffer[j];
+
+        /* Skip spaces after comma or newline */
+        while (j < len && *beg == ' ') {
+            ++j;
             beg = &buffer[j];
-
-            /* Skip spaces after comma or newline */
-            while (j < len && *beg == ' ') {
-                ++j;
-                beg = &buffer[j];
-            }
         }
     }
 
