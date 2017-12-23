@@ -49,7 +49,7 @@ static void open_log_files(void)
     crypto_disable();
     crypto_power_down();
     for (i = 0; i < 8; ++i)
-            dirname[i] = 'A' + (dirname[i] & 0xF);
+        dirname[i] = 'A' + (dirname[i] & 0xF);
     dirname[8] = '\0';
 
     /* Create directory */
@@ -61,29 +61,26 @@ static void open_log_files(void)
     /* Open file RADIO.TXT */
     sprintf(filepath, "%s/%s", dirname, "RADIO.TXT");
     radio_fd = fat16_open(filepath, 'w');
-    if (radio_fd < 0) {
+    if (radio_fd < 0)
         printf("Cannot log I/O to file %s\n", filepath);
-    } else {
+    else
         printf("Logging I/O to file %s\n", filepath);
-    }
 
     /* Open file OUTPUT.TXT */
     sprintf(filepath, "%s/%s", dirname, "OUTPUT.TXT");
     output_fd = fat16_open(filepath, 'w');
-    if (output_fd < 0) {
+    if (output_fd < 0)
         printf("Cannot log I/O to file %s\n", filepath);
-    } else {
+    else
         printf("Logging I/O to file %s\n", filepath);
-    }
 
     /* Open file MPU6050.TXT */
     sprintf(filepath, "%s/%s", dirname, "MPU6050.TXT");
     mpu6050_fd = fat16_open(filepath, 'w');
-    if (mpu6050_fd < 0) {
+    if (mpu6050_fd < 0)
         printf("Cannot log IMU data to file %s\n", filepath);
-    } else {
+    else
         printf("Logging IMU data to file %s\n", filepath);
-    }
 
     /*
      * Flush cache now to ensure that file will exist on the SD card
@@ -124,9 +121,8 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
 {
     unsigned int counter = 0;
 
-    if (config.sdcard_enabled) {
+    if (config.sdcard_enabled)
         open_log_files();
-    }
 
     if (config.mpu6050_enabled) {
         mpu6050_fifo_init(mpu6050_dev);
@@ -163,16 +159,14 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
 
         /* Ensure that logs are periodically saved to SD card */
         if (radio_fd >= 0 || output_fd >= 0 || mpu6050_fd >= 0) {
-            if (counter == 0) {
+            if (counter == 0)
                 sdcard_cache_flush();
-            }
         }
 
         mcu_delay(CONTROLLER_PERIOD_MS);
 
         counter += CONTROLLER_PERIOD_MS;
-        if (counter >= 2000) {
+        if (counter >= 2000)
             counter = 0;
-        }
     }
 }
