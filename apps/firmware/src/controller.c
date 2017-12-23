@@ -32,43 +32,42 @@ static int imu_fd = -1;
 
 static void open_log_files(void)
 {
-    char filename[13];
+    char dirname[9];
+    char filepath[32];
     unsigned int i;
 
-    /* Prepare filename */
+    /* Create directory name: 8 random letters */
     crypto_power_up();
     crypto_enable();
-    crypto_get_random(&filename[4], 4);
+    crypto_get_random(dirname, 8);
     crypto_disable();
     crypto_power_down();
+    for (i = 0; i < 8; ++i)
+            dirname[i] = 'A' + (dirname[i] & 0xF);
+    dirname[8] = '\0';
 
-    filename[0] = 'I';
-    filename[3] = '_';
-    for (i = 0; i < 4; ++i)
-        filename[i] = 'A' + (filename[i] & 0xF);
-    filename[8] = '.';
-    filename[9] = 'T';
-    filename[10] = 'X';
-    filename[11] = 'T';
-    filename[12] = '\0';
-
-    /* Open file IO__<random>.TXT */
-    filename[1] = 'O';
-    filename[2] = '_';
-    io_fd = fat16_open(filename, 'w');
-    if (io_fd < 0) {
-        printf("Cannot log I/O to file %s\n", filename);
-    } else {
-        printf("Starting logging I/O to file %s\n", filename);
+    /* Create directory */
+    if (fat16_mkdir(dirname) < 0) {
+        printf("Failed to create directory %s\n", dirname);
+        return;
     }
 
-    filename[1] = 'M';
-    filename[2] = 'U';
-    imu_fd = fat16_open(filename, 'w');
-    if (imu_fd < 0) {
-        printf("Cannot log IMU data to file %s\n", filename);
+    /* Open file IO.TXT */
+    sprintf(filepath, "%s/%s", dirname, "IO.TXT");
+    io_fd = fat16_open(filepath, 'w');
+    if (io_fd < 0) {
+        printf("Cannot log I/O to file %s\n", filepath);
     } else {
-        printf("Starting logging IMU data to file %s\n", filename);
+        printf("Logging I/O to file %s\n", filepath);
+    }
+
+    /* Open file MPU6050.TXT */
+    sprintf(filepath, "%s/%s", dirname, "MPU6050.TXT");
+    imu_fd = fat16_open(filepath, 'w');
+    if (imu_fd < 0) {
+        printf("Cannot log IMU data to file %s\n", filepath);
+    } else {
+        printf("Logging IMU data to file %s\n", filepath);
     }
 
     /*
