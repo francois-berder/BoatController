@@ -95,6 +95,20 @@ void uart_write(unsigned int uart_num, const void *buffer, uint32_t length);
 void uart_read(unsigned int uart_num, void *buffer, uint32_t length);
 
 /**
+ * @brief Receive some bytes over UART
+ *
+ * Note that the module must be initialised before calling
+ * this function.
+ * Unlike uart_read, this function does not block.
+ *
+ * @param[in] uart_num Index of the UART module
+ * @param[out] buffer Pointer to an array of bytes (must not be null)
+ * @param[in] length Number of bytes to receive
+ * @return Number of bytes read, which can be less than @p length
+ */
+uint32_t uart_read_noblock(unsigned int uart_num, void *buffer, uint32_t length);
+
+/**
  * @brief Power-up a UART module
  *
  * @param[in] uart_num Index of the UART module
