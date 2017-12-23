@@ -10,11 +10,16 @@ SD card and mpu6050 are optional. The controller will still perform as best as i
 ### SD card
 
 SD and SDHC cards are supported. The SD card must be contain at least one valid FAT16 partition in the master boot record.
-The controller will create a directory, whose name is random. In this directory, two files are created: ```IO.TXT``` and ```MPU6050.TXT```.
+The controller will create a directory, whose name is random. In this directory, three files are created: ```RADIO.TXT```, ```OUTPUT.TXT``` and ```MPU6050.TXT```.
 
-In ```IO.TXT```, the controller saves all radio frames and output frames using the following format:
+In ```RADIO.TXT```, the controller saves all radio frames using the following format:
 ```
-radio_dir, radio_speed, left_rudder, right_rudder, left_motor, right_motor
+radio_dir, radio_speed
+```
+
+In ```OUTPUT.TXT```, the controller saves all output frames using the following format:
+```
+left_rudder, right_rudder, left_motor, right_motor
 ```
 
 In ```MPU6050.TXT```, the controller saves all samples from the MPU6050 using the following format:
