@@ -26,12 +26,25 @@
 #define MPU6050_FIFO_DEPTH          (32)
 #endif
 
+/* By default, use timer 5 */
+#ifndef MPU6050_FIFO_TIMER_NUM
+#define MPU6050_FIFO_TIMER_NUM      (5)
+#endif
+
 static struct mpu6050_dev_t dev;
 static struct mpu6050_sample_t samples[MPU6050_FIFO_DEPTH];
 static volatile unsigned int sample_count;
 static volatile unsigned int fifo_start_index;
 
+#if MPU6050_FIFO_TIMER_NUM == 2
+void timer2_callback(void)
+#elif MPU6050_FIFO_TIMER_NUM == 3
+void timer3_callback(void)
+#elif MPU6050_FIFO_TIMER_NUM == 4
+void timer4_callback(void)
+#elif MPU6050_FIFO_TIMER_NUM == 5
 void timer5_callback(void)
+#endif
 {
     unsigned int index;
 
@@ -52,15 +65,15 @@ void mpu6050_fifo_init(struct mpu6050_dev_t _dev)
 
 void mpu6050_fifo_start(void)
 {
-    timer_power_up(TIMER_5);
-    timer_configure(TIMER_5, TIMER5_PRESCALER_64, 1250, 1);
-    timer_start(TIMER_5);
+    timer_power_up(MPU6050_FIFO_TIMER_NUM);
+    timer_configure(MPU6050_FIFO_TIMER_NUM, TIMER5_PRESCALER_64, 1250, 1);
+    timer_start(MPU6050_FIFO_TIMER_NUM);
 }
 
 void mpu6050_fifo_stop(void)
 {
-    timer_stop(TIMER_5);
-    timer_power_down(TIMER_5);
+    timer_stop(MPU6050_FIFO_TIMER_NUM);
+    timer_power_down(MPU6050_FIFO_TIMER_NUM);
 }
 
 void mpu6050_fifo_clear_samples(void)
