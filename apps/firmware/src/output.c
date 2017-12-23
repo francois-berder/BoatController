@@ -23,6 +23,8 @@
 #include "periph/timer.h"
 #include "periph_conf.h"
 
+#define NEUTRAL_POS     (6000)
+
 #define LEFT_RUDDER_PIN         (GPIO_PIN(PORT_B, 2))
 #define RIGHT_RUDDER_PIN        (GPIO_PIN(PORT_B, 3))
 #define LEFT_MOTOR_PIN          (GPIO_PIN(PORT_A, 2))
@@ -109,10 +111,10 @@ void output_configure(void)
 
     state = RIGHT_MOTOR;
 
-    current_frame.left_rudder = 6000;
-    current_frame.right_rudder = 6000;
-    current_frame.left_motor = 6000;
-    current_frame.right_motor = 6000;
+    current_frame.left_rudder = NEUTRAL_POS;
+    current_frame.right_rudder = NEUTRAL_POS;
+    current_frame.left_motor = NEUTRAL_POS;
+    current_frame.right_motor = NEUTRAL_POS;
     next_frame = current_frame;
 
     gpio_init_out(LEFT_RUDDER_PIN, 0);
