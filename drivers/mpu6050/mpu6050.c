@@ -89,6 +89,40 @@ static uint16_t to_le(uint8_t msb, uint8_t lsb)
     return (msb << 8) | lsb;
 }
 
+static void rectify_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
+{
+    int32_t x, y, z;
+
+    x = sample->accel.x;
+    x <<= 4;
+    x *= dev->cdata.accel.coeff.x;
+    x >>= 4;
+    x += dev->cdata.accel.offset.x;
+
+    y = sample->accel.y;
+    y <<= 4;
+    y *= dev->cdata.accel.coeff.y;
+    y >>= 4;
+    y += dev->cdata.accel.offset.y;
+
+    z = sample->accel.z;
+    z <<= 4;
+    z *= dev->cdata.accel.coeff.z;
+    z >>= 4;
+    z += dev->cdata.accel.offset.z;
+
+    sample->accel.x = x >> 4;
+    sample->accel.y = y >> 4;
+    sample->accel.z = z >> 4;
+}
+
+static void rectify_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
+{
+    sample->gyro.x -= dev->cdata.gyro.offset.x;
+    sample->gyro.y -= dev->cdata.gyro.offset.y;
+    sample->gyro.z -= dev->cdata.gyro.offset.z;
+}
+
 int mpu6050_init(struct mpu6050_dev_t *dev, unsigned int enable_acc, unsigned int enable_gyro)
 {
     if (read_8bit_reg(dev->i2c_num, WHO_AM_I) != MPU6050_DEVICE_ID)
@@ -147,6 +181,9 @@ void mpu6050_get_acc_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sa
     sample->gyro.x = to_le(buffer[8], buffer[9]);
     sample->gyro.y = to_le(buffer[10], buffer[11]);
     sample->gyro.z = to_le(buffer[12], buffer[13]);
+
+    rectify_acc(dev, sample);
+    rectify_gyro(dev, sample);
 }
 
 void mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
@@ -161,6 +198,8 @@ void mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
     sample->accel.x = to_le(buffer[0], buffer[1]);
     sample->accel.y = to_le(buffer[2], buffer[3]);
     sample->accel.z = to_le(buffer[4], buffer[5]);
+
+    rectify_acc(dev, sample);
 }
 
 void mpu6050_get_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
@@ -175,6 +214,8 @@ void mpu6050_get_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample
     sample->gyro.x = to_le(buffer[0], buffer[1]);
     sample->gyro.y = to_le(buffer[2], buffer[3]);
     sample->gyro.z = to_le(buffer[4], buffer[5]);
+
+    rectify_gyro(dev, sample);
 }
 
 void mpu6050_power_up(struct mpu6050_dev_t *dev)
