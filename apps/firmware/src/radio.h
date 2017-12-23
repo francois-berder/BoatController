@@ -27,14 +27,37 @@ struct radio_frame_t {
     uint16_t speed;
 };
 
+/**
+ * @brief Configure radio module
+ *
+ * Notice that this function does not enable this module.
+ */
 void radio_configure(void);
 
+/**
+ * @brief Enable radio module
+ */
 void radio_enable(void);
 
+/**
+ * @brief Disable radio module
+ */
 void radio_disable(void);
 
+/**
+ * @retval 0 No frame is avaialble
+ * @retval 1 A frame is available
+ */
 uint8_t radio_has_frame(void);
 
+/**
+ * @brief Retrieve a frame from radio module FIFO
+ *
+ * Do **not** call this function if no frame is avaiable.
+ * Check frame availability with radio_has_frame.
+ *
+ * @return a radio frame
+ */
 struct radio_frame_t radio_get_frame(void);
 
 #endif
