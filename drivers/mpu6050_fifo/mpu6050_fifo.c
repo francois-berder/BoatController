@@ -22,12 +22,12 @@
 #include "periph/timer.h"
 #include "periph_conf.h"
 
-#ifndef IMU_FIFO_DEPTH
-#define IMU_FIFO_DEPTH          (32)
+#ifndef MPU6050_FIFO_DEPTH
+#define MPU6050_FIFO_DEPTH          (32)
 #endif
 
 static struct mpu6050_dev_t dev;
-static struct mpu6050_sample_t samples[IMU_FIFO_DEPTH];
+static struct mpu6050_sample_t samples[MPU6050_FIFO_DEPTH];
 static volatile unsigned int sample_count;
 static volatile unsigned int fifo_start_index;
 
@@ -35,10 +35,10 @@ void timer5_callback(void)
 {
     unsigned int index;
 
-    if (sample_count >= IMU_FIFO_DEPTH)
+    if (sample_count >= MPU6050_FIFO_DEPTH)
         return;
 
-    index = (fifo_start_index + sample_count) & (IMU_FIFO_DEPTH - 1);
+    index = (fifo_start_index + sample_count) & (MPU6050_FIFO_DEPTH - 1);
     mpu6050_get_acc_gyro(&dev, &samples[index]);
     ++sample_count;
 }
@@ -89,10 +89,10 @@ int mpu6050_fifo_get_sample(struct mpu6050_sample_t *sample)
 
     mcu_disable_interrupts();
     if (sample_count > 0) {
-        index = (fifo_start_index + sample_count) & (IMU_FIFO_DEPTH - 1);
+        index = (fifo_start_index + sample_count) & (MPU6050_FIFO_DEPTH - 1);
         *sample = samples[index];
         ++fifo_start_index;
-        fifo_start_index &= (IMU_FIFO_DEPTH - 1);
+        fifo_start_index &= (MPU6050_FIFO_DEPTH - 1);
         --sample_count;
         ret = 1;
     }
