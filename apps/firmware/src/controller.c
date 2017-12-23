@@ -27,33 +27,48 @@
 #include "radio.h"
 #include "sdcard_cache/sdcard_cache.h"
 
-static int fd = -1;
+static int io_fd = -1;
+static int imu_fd = -1;
 
-static void open_log_file(void)
+static void open_log_files(void)
 {
     char filename[13];
     unsigned int i;
 
+    /* Prepare filename */
     crypto_power_up();
     crypto_enable();
-    crypto_get_random(filename, 8);
+    crypto_get_random(&filename[4], 4);
     crypto_disable();
     crypto_power_down();
 
-    for (i = 0; i < 8; ++i)
+    filename[0] = 'I';
+    filename[3] = '_';
+    for (i = 0; i < 4; ++i)
         filename[i] = 'A' + (filename[i] & 0xF);
-
     filename[8] = '.';
     filename[9] = 'T';
     filename[10] = 'X';
     filename[11] = 'T';
     filename[12] = '\0';
 
-    fd = fat16_open(filename, 'w');
-    if (fd < 0) {
-        printf("Cannot log to file %s\n", filename);
+    /* Open file IO__<random>.TXT */
+    filename[1] = 'O';
+    filename[2] = '_';
+    io_fd = fat16_open(filename, 'w');
+    if (io_fd < 0) {
+        printf("Cannot log I/O to file %s\n", filename);
     } else {
-        printf("Starting logging to file %s\n", filename);
+        printf("Starting logging I/O to file %s\n", filename);
+    }
+
+    filename[1] = 'M';
+    filename[2] = 'U';
+    imu_fd = fat16_open(filename, 'w');
+    if (imu_fd < 0) {
+        printf("Cannot log IMU data to file %s\n", filename);
+    } else {
+        printf("Starting logging IMU data to file %s\n", filename);
     }
 
     /*
@@ -63,14 +78,24 @@ static void open_log_file(void)
     sdcard_cache_flush();
 }
 
-static void log_frame(struct radio_frame_t rf, struct output_frame_t of)
+static void log_io(struct radio_frame_t rf, struct output_frame_t of)
 {
     char buffer[128];
     int ret = sprintf(buffer, "%u, %u, %u, %u, %u, %u\n",
                       rf.dir, rf.speed,
                       of.left_rudder, of.right_rudder, of.left_motor, of.right_motor);
     if (ret >= 0)
-        fat16_write(fd, buffer, ret);
+        fat16_write(io_fd, buffer, ret);
+}
+
+static void log_imu(struct mpu6050_sample_t s)
+{
+    char buffer[128];
+    int ret = sprintf(buffer, "%d, %d, %d, %d, %d, %d\n",
+                      s.accel.x, s.accel.y, s.accel.z,
+                      s.gyro.x, s.gyro.y, s.gyro.z);
+    if (ret >= 0)
+        fat16_write(imu_fd, buffer, ret);
 }
 
 void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev)
@@ -78,7 +103,7 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
     unsigned int counter = 0;
 
     if (config.sdcard_enabled) {
-        open_log_file();
+        open_log_files();
     }
 
     if (config.mpu6050_enabled) {
@@ -99,15 +124,24 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
 
             output_set_frame(output_frame);
 
-           if (fd >= 0)
-                log_frame(radio_frame, output_frame);
+           if (io_fd >= 0)
+                log_io(radio_frame, output_frame);
+        }
+
+        /* Record all samples available from MPU6050 FIFO */
+        {
+            struct mpu6050_sample_t s;
+            while (mpu6050_fifo_get_sample(&s) == 1) {
+                if (imu_fd >= 0)
+                    log_imu(s);
+            }
         }
 
         /* Wait 5ms */
         mcu_delay(5);
 
         /* Ensure that log file is periodically saved to SD card */
-        if (fd >= 0) {
+        if (io_fd >= 0 || imu_fd >= 0) {
             counter += 5;
             if (counter >= 2000) {
                 counter = 0;

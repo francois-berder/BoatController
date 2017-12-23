@@ -9,13 +9,20 @@ SD card and mpu6050 are optional. The controller will still perform as best as i
 
 ### SD card
 
-SD and SDHC cards are supported. The SD card must be contain at least one valid FAT16 partition in the master boot
-record.
-The controller will create a file with a random name in the root directory and save all radio frames and output frames in this file using the following format:
+SD and SDHC cards are supported. The SD card must be contain at least one valid FAT16 partition in the master boot record.
+The controller will create two files in the root directory: ```IO__<random>.TXT``` and ```IMU_<random>.TXT```, ```<random>``` being 4 letters chosen at random.
+
+In ```IO__<random>.TXT```, the controller saves all radio frames and output frames using the following format:
 ```
 radio_dir, radio_speed, left_rudder, right_rudder, left_motor, right_motor
 ```
-The controller flushes all blocks every 2 seconds such that not much data is lost when the board is powered off.
+
+In ```IMU_<random>.TXT```, the controller saves all samples from the MPU6050 using the following format:
+```
+accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z
+```
+
+The controller flushes all blocks to the SD card every 2 seconds such that not much data is lost when the board is powered off.
 
 ### MPU6050 accel/gyro
 
