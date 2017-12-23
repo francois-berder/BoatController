@@ -73,8 +73,18 @@ static unsigned int load_block(void)
             }
         }
 
+        /* Write back evicted block to SD card */
         if (cache[cache_index].status & CACHE_ENTRY_DIRTY_FLAG)
             sdcard_write_block(&dev, cache[cache_index].block, cache[cache_index].sector);
+
+        /*
+         * Reset counters of all valid entries.
+         * This aims at preventing old entries to stay in cache forever.
+         */
+        for (i = 0; i < CACHE_ENTRY_COUNT; ++i) {
+            if (cache[cache_index].status & CACHE_ENTRY_VALID_FLAG)
+                cache[cache_index].status &= ~CACHE_ENTRY_COUNTER_MASK;
+        }
     }
 
     /* Initialise cache entry */
