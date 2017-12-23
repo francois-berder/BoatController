@@ -178,7 +178,7 @@ static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
      * accel.coeff.x, 0, 0, accel.offset.x
      * 0, accel.coeff.y, 0, accel.offset.y
      * 0, 0, accel.coeff.z, accel.offset.z
-     *
+     * gyro.offset.x, gyro.offset.y, gyro.offset.z
      */
     beg = &buffer[0];
     while (i < len && *beg == ' ') {    /* Skip spaces at beginning of file */
@@ -209,6 +209,15 @@ static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
             case 11:
                 cdata->accel.offset.z = n;
                 break;
+            case 12:
+                cdata->gyro.offset.x = n;
+                break;
+            case 13:
+                cdata->gyro.offset.y = n;
+                break;
+            case 14:
+                cdata->gyro.offset.z = n;
+                break;
             default:
                 break;
             }
@@ -225,8 +234,8 @@ static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
         }
     }
 
-    /* We expect 12 numbers in this file */
-    if (num != 12)
+    /* We expect 15 numbers in this file */
+    if (num != 15)
         return -1;
 
     return 0;
