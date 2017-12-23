@@ -115,6 +115,7 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
     }
 
     while (1) {
+        /* Process all frames available from the radio */
         if (radio_has_frame()) {
             struct radio_frame_t radio_frame;
             struct output_frame_t output_frame;
@@ -131,7 +132,7 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
                 log_io(radio_frame, output_frame);
         }
 
-        /* Record all samples available from MPU6050 FIFO */
+        /* Process all samples available from MPU6050 FIFO */
         {
             struct mpu6050_sample_t s;
             while (mpu6050_fifo_get_sample(&s) == 1) {
@@ -140,15 +141,18 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
             }
         }
 
-        mcu_delay(CONTROLLER_PERIOD_MS);
-
-        /* Ensure that log file is periodically saved to SD card */
+        /* Ensure that logs are periodically saved to SD card */
         if (io_fd >= 0 || imu_fd >= 0) {
-            counter += 5;
-            if (counter >= 2000) {
-                counter = 0;
+            if (counter == 0) {
                 sdcard_cache_flush();
             }
+        }
+
+        mcu_delay(CONTROLLER_PERIOD_MS);
+
+        counter += CONTROLLER_PERIOD_MS;
+        if (counter >= 2000) {
+            counter = 0;
         }
     }
 }
