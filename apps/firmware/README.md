@@ -38,3 +38,13 @@ will only be used if both MPU6050 and SD card are detected at initialisation.
   - **one flash every 2 seconds**: Initialisation is complete, MPU6050 could not be initialised
   - **two flash every 2 seconds**: Initialisation is complete, sdcard could not be initialised
   - **three flash every 2 seconds**: Initialisation is complete, sdcard and MPU6050 could not be initialised
+
+### Timer usage
+
+|**timer index**|**module/driver**|**description**|**frequency (Hz)**|
+|:--------------:|:--------------:|:-------------------:|:--------:|
+| 1 | none | mcu_delay | 1000 |
+| 2 | status | blink LED | 10 |
+| 3 | output | Iterate over all states | 250 |
+| 4 | output | Set pin low | 500-1000 |
+| 5 | MPU6050 fifo driver | Read sample from MPU6050 | 50 |
