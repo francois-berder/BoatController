@@ -138,6 +138,21 @@ void uart_read(unsigned int uart_num, void *buffer, uint32_t length)
     }
 }
 
+uint32_t uart_read_noblock(unsigned int uart_num, void *buffer, uint32_t length)
+{
+    uint8_t *data = (uint8_t *)buffer;
+    uint32_t byte_read_count = 0;
+
+    while (byte_read_count < length) {
+        if (UxSTA(uart_num) & _U1STA_URXDA_MASK)
+            data[byte_read_count] = UxRXREG(uart_num);
+        else
+            break;
+    }
+
+    return byte_read_count;
+}
+
 void uart_power_up(unsigned int uart_num)
 {
     switch (uart_num) {
