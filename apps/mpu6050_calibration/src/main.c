@@ -161,7 +161,7 @@ static uint32_t find_fat16_partition(struct sdcard_spi_dev_t *dev)
 
 static void wait_for_user(void)
 {
-    char c;
+    char c = 0;
     do {
         char buffer[128];
         struct mpu6050_sample_t raw_sample;
@@ -171,7 +171,10 @@ static void wait_for_user(void)
                 "\rPress enter to continue, (%d, %d, %d)\n",
                 raw_sample.accel.x, raw_sample.accel.y, raw_sample.accel.z);
         printf("%s", buffer);
-        uart_read(UART_1, &c, 1);
+
+        /* If no character is avaible, let's try again 20ms later */
+        if (uart_read_noblock(UART_1, &c, 1) == 0)
+            mcu_delay(20);
     } while (c != '\n');
 }
 
