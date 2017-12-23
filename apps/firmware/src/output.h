@@ -31,8 +31,22 @@ struct output_frame_t {
 
 /**
  * @brief Configure output module
+ *
+ * Notice that this function does not enable the module.
  */
 void output_configure(void);
+
+/**
+ * @brief Enable module
+ *
+ * It is assumed that output_configure was called before
+ */
+void output_enable(void);
+
+/**
+ * @brief Disable module
+ */
+void output_disable(void);
 
 /**
  * @brief Set output frame

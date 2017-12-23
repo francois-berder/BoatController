@@ -103,6 +103,10 @@ void output_configure(void)
     timer_stop(TIMER_3);
     timer_stop(TIMER_4);
 
+    /* Configure timer 3 to call callback every 4 ms */
+    timer_power_up(TIMER_3);
+    timer_configure(TIMER_3, TIMER3_PRESCALER_8, 2000, 1);
+
     state = RIGHT_MOTOR;
 
     current_frame.left_rudder = 6000;
@@ -115,11 +119,26 @@ void output_configure(void)
     gpio_init_out(RIGHT_RUDDER_PIN, 0);
     gpio_init_out(LEFT_MOTOR_PIN, 0);
     gpio_init_out(RIGHT_MOTOR_PIN, 0);
+}
 
-    /* Configure timer 3 to call callback every 4 ms */
-    timer_power_up(TIMER_3);
-    timer_configure(TIMER_3, TIMER3_PRESCALER_8, 2000, 1);
+void output_enable(void)
+{
+    gpio_write(LEFT_RUDDER_PIN, 0);
+    gpio_write(RIGHT_RUDDER_PIN, 0);
+    gpio_write(LEFT_MOTOR_PIN, 0);
+    gpio_write(RIGHT_MOTOR_PIN, 0);
     timer_start(TIMER_3);
+}
+
+void output_disable(void)
+{
+    gpio_write(LEFT_RUDDER_PIN, 0);
+    gpio_write(RIGHT_RUDDER_PIN, 0);
+    gpio_write(LEFT_MOTOR_PIN, 0);
+    gpio_write(RIGHT_MOTOR_PIN, 0);
+
+    timer_stop(TIMER_3);
+    timer_stop(TIMER_4);
 }
 
 void output_set_frame(struct output_frame_t frame)

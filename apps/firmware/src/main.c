@@ -291,6 +291,7 @@ int main(void)
     /* Configure output module */
     printf("Configuring output module...");
     output_configure();
+    output_enable();
     printf("done\n");
 
     /* Prepare MPU6050 device */
