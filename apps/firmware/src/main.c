@@ -283,12 +283,6 @@ int main(void)
 
     printf(welcome_msg);
 
-    /* Configure radio */
-    printf("Configuring radio...");
-    radio_configure();
-    radio_enable();
-    printf("done\n");
-
     /* Configure output module */
     printf("Configuring output module...");
     output_configure();
@@ -383,6 +377,12 @@ int main(void)
         if (load_calibration_data(&mpu6050_dev.cdata) < 0)
             printf("Failed to load calibration data from SD card.\n");
     }
+
+    /* Configure radio */
+    printf("Configuring radio...");
+    radio_configure();
+    radio_enable();
+    printf("done\n");
 
     printf("Initialisation finished\n");
 
