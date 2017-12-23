@@ -27,6 +27,10 @@
 #include "radio.h"
 #include "sdcard_cache/sdcard_cache.h"
 
+#ifndef CONTROLLER_PERIOD_MS
+#define CONTROLLER_PERIOD_MS    (4)
+#endif
+
 static int io_fd = -1;
 static int imu_fd = -1;
 
@@ -136,8 +140,7 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
             }
         }
 
-        /* Wait 5ms */
-        mcu_delay(5);
+        mcu_delay(CONTROLLER_PERIOD_MS);
 
         /* Ensure that log file is periodically saved to SD card */
         if (io_fd >= 0 || imu_fd >= 0) {
