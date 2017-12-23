@@ -175,16 +175,17 @@ static void wait_for_user(void)
     } while (c != '\n');
 }
 
-static void compute_avg(int16_t *ax, int16_t *ay, int16_t *az)
+static void compute_avg(int16_t *ax, int16_t *ay, int16_t *az,
+                        int16_t *gx, int16_t *gy, int16_t *gz)
 {
     struct mpu6050_sample_t samples[SAMPLE_COUNT];
     unsigned int i;
-    uint64_t avg[3] = {0, 0, 0};
+    uint64_t avg[6] = {0, 0, 0, 0, 0, 0};
 
     printf("Retrieving %u samples", SAMPLE_COUNT);
     for (i = 0; i < SAMPLE_COUNT; ++i) {
         printf(".");
-        mpu6050_get_acc(&mpu6050_dev, &samples[i]);
+        mpu6050_get_acc_gyro(&mpu6050_dev, &samples[i]);
         mcu_delay(10);
     }
     printf("\n");
@@ -194,18 +195,29 @@ static void compute_avg(int16_t *ax, int16_t *ay, int16_t *az)
         avg[0] += samples[i].accel.x;
         avg[1] += samples[i].accel.y;
         avg[2] += samples[i].accel.z;
+        avg[3] += samples[i].gyro.x;
+        avg[4] += samples[i].gyro.y;
+        avg[5] += samples[i].gyro.z;
     }
     avg[0] >>= 7;
     avg[1] >>= 7;
     avg[2] >>= 7;
+    avg[3] >>= 7;
+    avg[4] >>= 7;
+    avg[5] >>= 7;
 
     *ax = avg[0];
     *ay = avg[1];
     *az = avg[2];
+    *gx = avg[0];
+    *gy = avg[1];
+    *gz = avg[2];
+
     printf("avg accel (%d, %d, %d)\n", *ax, *ay, *az);
+    printf("avg gyro (%d, %d, %d)\n", *gx, *gy, *gz);
 }
 
-static void compute_calibration_data(int16_t *raw_accel)
+static void compute_calibration_data(int16_t *raw_accel, int16_t *raw_gyro)
 {
     int32_t x, x2;
     int32_t y, y2;
@@ -226,10 +238,19 @@ static void compute_calibration_data(int16_t *raw_accel)
     cdata.accel.coeff.z = 131072L / (z2 - z);
     cdata.accel.offset.z = - cdata.accel.coeff.z * z;
 
+    cdata.gyro.offset.x = (raw_gyro[0] + raw_gyro[3] + raw_gyro[6]) / 3;
+    cdata.gyro.offset.y = (raw_gyro[1] + raw_gyro[4] + raw_gyro[7]) / 3;
+    cdata.gyro.offset.z = (raw_gyro[2] + raw_gyro[5] + raw_gyro[8]) / 3;
+
     printf("Calibration data:\n");
-    printf("coeff x = %d, offset x = %d\n", cdata.accel.coeff.x, cdata.accel.offset.x);
-    printf("coeff y = %d, offset y = %d\n", cdata.accel.coeff.y, cdata.accel.offset.y);
-    printf("coeff z = %d, offset z = %d\n", cdata.accel.coeff.z, cdata.accel.offset.z);
+    printf("\tAccelerometer:\n");
+    printf("\t\tcoeff x = %d, offset x = %d\n", cdata.accel.coeff.x, cdata.accel.offset.x);
+    printf("\t\tcoeff y = %d, offset y = %d\n", cdata.accel.coeff.y, cdata.accel.offset.y);
+    printf("\t\tcoeff z = %d, offset z = %d\n", cdata.accel.coeff.z, cdata.accel.offset.z);
+    printf("\tGyroscope:\n");
+    printf("\t\toffset x = %d\n", cdata.gyro.offset.x);
+    printf("\t\toffset y = %d\n", cdata.gyro.offset.y);
+    printf("\t\toffset z = %d\n", cdata.gyro.offset.z);
 }
 
 static void save_calibration_data(void)
@@ -313,7 +334,7 @@ static void save_calibration_data(void)
 
 int main(void)
 {
-    int16_t raw_accel[9];
+    int16_t raw_accel[9], raw_gyro[9];
     struct sdcard_spi_dev_t sdcard_dev;
 
     mcu_set_system_clock(8000000LU);
@@ -434,17 +455,20 @@ int main(void)
 
     printf("Place the MPU6050 on a flat surface such that Z axis is pointing to earth\n");
     wait_for_user();
-    compute_avg(&raw_accel[0], &raw_accel[1], &raw_accel[2]);
+    compute_avg(&raw_accel[0], &raw_accel[1], &raw_accel[2],
+                &raw_gyro[0], &raw_gyro[1], &raw_gyro[2]);
 
     printf("Place the MPU6050 on a flat surface such that Y axis is pointing to earth\n");
     wait_for_user();
-    compute_avg(&raw_accel[3], &raw_accel[4], &raw_accel[5]);
+    compute_avg(&raw_accel[3], &raw_accel[4], &raw_accel[5],
+                &raw_gyro[3], &raw_gyro[4], &raw_gyro[5]);
 
     printf("Place the MPU6050 on a flat surface such that X axis is pointing to earth\n");
     wait_for_user();
-    compute_avg(&raw_accel[6], &raw_accel[7], &raw_accel[8]);
+    compute_avg(&raw_accel[6], &raw_accel[7], &raw_accel[8],
+                &raw_gyro[6], &raw_gyro[7], &raw_gyro[8]);
 
-    compute_calibration_data(raw_accel);
+    compute_calibration_data(raw_accel, raw_gyro);
     save_calibration_data();
 
     printf("\n");
