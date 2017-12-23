@@ -286,6 +286,7 @@ int main(void)
     /* Configure radio */
     printf("Configuring radio...");
     radio_configure();
+    radio_enable();
     printf("done\n");
 
     /* Configure output module */

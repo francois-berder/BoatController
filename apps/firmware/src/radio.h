@@ -29,6 +29,10 @@ struct radio_frame_t {
 
 void radio_configure(void);
 
+void radio_enable(void);
+
+void radio_disable(void);
+
 uint8_t radio_has_frame(void);
 
 struct radio_frame_t radio_get_frame(void);

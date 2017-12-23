@@ -97,8 +97,18 @@ void radio_configure(void)
     dir_buf_prev = 0;
     speed_buf_prev = 0;
 
+}
+
+void radio_enable(void)
+{
     ic_enable(IC_1);
     ic_enable(IC_2);
+}
+
+void radio_disable(void)
+{
+    ic_disable(IC_1);
+    ic_disable(IC_2);
 }
 
 uint8_t radio_has_frame(void)
