@@ -109,6 +109,33 @@ static struct storage_dev_t dev = {
     sdcard_cache_seek
 };
 
+static void configure_gpios(void)
+{
+    /* Configure unused I/O as output low */
+    gpio_init_out(GPIO_PIN(PORT_A, 0), 0);
+    gpio_init_out(GPIO_PIN(PORT_A, 1), 0);
+    gpio_init_out(GPIO_PIN(PORT_A, 4), 0);
+
+    /* UART1 */
+    gpio_init_out(UART_TX_PIN, 1);
+    gpio_init_in(UART_RX_PIN);
+    RPOR7 |= 0x0300;
+    RPINR18 |= 0x000E;
+
+    /* I2C1 */
+    gpio_init_out(I2C_SCL_PIN, 1);
+    gpio_init_out(I2C_SDA_PIN, 1);
+
+    /* SPI1 */
+    gpio_init_out(MOSI_PIN, 0);
+    gpio_init_in(MISO_PIN);
+    gpio_init_out(SCK_PIN, 0);
+    gpio_init_out(CS_PIN, 1);
+    RPOR6bits.RP13R = 0x0007;       /* SPI1 - MOSI */
+    RPINR20bits.SDI1R = 0x0004;     /* SPI1 - MISO */
+    RPOR3bits.RP6R = 0x0008;        /* SPI1 - SCK */
+}
+
 /**
  * @brief Try to find a FAT16 partition on the SD card
  *
@@ -252,10 +279,7 @@ int main(void)
 
     mcu_set_system_clock(8000000LU);
 
-    /* Configure unused I/O as output low */
-    gpio_init_out(GPIO_PIN(PORT_A, 0), 0);
-    gpio_init_out(GPIO_PIN(PORT_A, 1), 0);
-    gpio_init_out(GPIO_PIN(PORT_A, 4), 0);
+    configure_gpios();
 
     /* Power down all peripherals */
     PMD1 = 0xFFFF;
@@ -276,10 +300,6 @@ int main(void)
     status_set_mode(STATUS_FAST_BLINK);
 
     /* Configure uart */
-    gpio_init_out(UART_TX_PIN, 1);
-    gpio_init_in(UART_RX_PIN);
-    RPOR7 |= 0x0300;
-    RPINR18 |= 0x000E;
     uart_power_up(UART_1);
     uart_configure(UART_1, UART_BD_9600);
     uart_enable(UART_1);
@@ -300,8 +320,6 @@ int main(void)
 
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
-    gpio_init_out(I2C_SCL_PIN, 1);
-    gpio_init_out(I2C_SDA_PIN, 1);
     i2c_power_up(I2C_1);
     i2c_configure(I2C_1, I2C_FAST_SPEED);
     i2c_enable(I2C_1);
@@ -316,18 +334,8 @@ int main(void)
 
     /* Configure SD card */
     printf("Configuring SD card...");
-    gpio_init_out(MOSI_PIN, 0);
-    gpio_init_in(MISO_PIN);
-    gpio_init_out(SCK_PIN, 0);
-    gpio_init_out(CS_PIN, 1);
-
-    RPOR6bits.RP13R = 0x0007;
-    RPINR20bits.SDI1R = 0x0004;
-    RPOR3bits.RP6R = 0x0008;
-
     spi_power_up(SPI_1);
     spi_enable(SPI_1);
-
     sdcard_dev.spi_num = SPI_1;
     sdcard_dev.cs_pin = CS_PIN;
     if (!sdcard_init(&sdcard_dev)) {
