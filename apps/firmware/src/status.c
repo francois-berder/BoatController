@@ -32,7 +32,10 @@ void timer2_callback(void)
 
     switch (mode) {
     case STATUS_OFF:
+        gpio_write(led_pin, 0);
+        break;
     case STATUS_ON:
+        gpio_write(led_pin, 1);
         break;
     case STATUS_FLASH:
         if (counter == 50)
