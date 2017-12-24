@@ -31,7 +31,11 @@
 #define MPU6050_FIFO_TIMER_NUM      (5)
 #endif
 
+#define MPU6050_FIFO_ACC_ENABLED    (0x1)
+#define MPU6050_FIFO_GYRO_ENABLED   (0x2)
+
 static struct mpu6050_dev_t dev;
+static volatile unsigned int features;
 static struct mpu6050_sample_t samples[MPU6050_FIFO_DEPTH];
 static volatile unsigned int sample_count;
 static volatile unsigned int fifo_start_index;
@@ -52,15 +56,26 @@ void timer5_callback(void)
         return;
 
     index = (fifo_start_index + sample_count) & (MPU6050_FIFO_DEPTH - 1);
-    mpu6050_get_acc_gyro(&dev, &samples[index]);
+    if (features & (MPU6050_FIFO_ACC_ENABLED | MPU6050_FIFO_GYRO_ENABLED))
+        mpu6050_get_acc_gyro(&dev, &samples[index]);
+    else if (features & MPU6050_FIFO_ACC_ENABLED)
+        mpu6050_get_acc(&dev, &samples[index]);
+    else if (features & MPU6050_FIFO_GYRO_ENABLED)
+        mpu6050_get_gyro(&dev, &samples[index]);
     ++sample_count;
 }
 
-void mpu6050_fifo_init(struct mpu6050_dev_t _dev)
+void mpu6050_fifo_init(struct mpu6050_dev_t _dev, unsigned int use_acc, unsigned int use_gyro)
 {
     dev = _dev;
     sample_count = 0;
     fifo_start_index = 0;
+    features = 0;
+
+    if (use_acc)
+        features |= MPU6050_FIFO_ACC_ENABLED;
+    if (use_gyro)
+        features |= MPU6050_FIFO_GYRO_ENABLED;
 }
 
 void mpu6050_fifo_start(void)

@@ -24,8 +24,17 @@
 
 /**
  * @brief Initialise FIFO and timer
+ *
+ * mpu6050_init must have been called before.
+ * The last two parameters control what will be retrieved from
+ * the MPU6050. Hence, if use_gyro is set to 0, samples will not
+ * hold valid data.
+ *
+ * @param[in] dev
+ * @param[in] use_acc A boolean to read or not accelerometer data
+ * @param[in] use_gyro A boolean to read or not gyroscope data
  */
-void mpu6050_fifo_init(struct mpu6050_dev_t dev);
+void mpu6050_fifo_init(struct mpu6050_dev_t dev, unsigned int use_acc, unsigned int use_gyro);
 
 /**
  * @brief Start collecting samples
