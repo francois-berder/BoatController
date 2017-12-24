@@ -214,7 +214,7 @@ int main(void)
     else
         stop("Failed to initialise MPU6050");
 
-    mpu6050_fifo_init(mpu6050_dev);
+    mpu6050_fifo_init(mpu6050_dev, 1, 1);
 
     /* Configure SD card */
     printf("Configuring SD card...");
