@@ -120,6 +120,33 @@ static void stop(const char *reason)
         ;
 }
 
+static void configure_gpios(void)
+{
+    /* Configure unused I/O as output low */
+    gpio_init_out(GPIO_PIN(PORT_A, 0), 0);
+    gpio_init_out(GPIO_PIN(PORT_A, 1), 0);
+    gpio_init_out(GPIO_PIN(PORT_A, 4), 0);
+
+    /* UART1 */
+    gpio_init_out(UART_TX_PIN, 1);
+    gpio_init_in(UART_RX_PIN);
+    RPOR7 |= 0x0300;
+    RPINR18 |= 0x000E;
+
+    /* I2C1 */
+    gpio_init_out(I2C_SCL_PIN, 1);
+    gpio_init_out(I2C_SDA_PIN, 1);
+
+    /* SPI1 */
+    gpio_init_out(MOSI_PIN, 0);
+    gpio_init_in(MISO_PIN);
+    gpio_init_out(SCK_PIN, 0);
+    gpio_init_out(CS_PIN, 1);
+    RPOR6bits.RP13R = 0x0007;       /* SPI1 - MOSI */
+    RPINR20bits.SDI1R = 0x0004;     /* SPI1 - MISO */
+    RPOR3bits.RP6R = 0x0008;        /* SPI1 - SCK */
+}
+
 void timer2_callback(void)
 {
     gpio_toggle(LED_PIN);
@@ -342,10 +369,7 @@ int main(void)
 
     mcu_set_system_clock(8000000LU);
 
-    /* Configure unused I/O as output low */
-    gpio_init_out(GPIO_PIN(PORT_A, 0), 0);
-    gpio_init_out(GPIO_PIN(PORT_A, 1), 0);
-    gpio_init_out(GPIO_PIN(PORT_A, 4), 0);
+    configure_gpios();
 
     /* Power down all peripherals */
     PMD1 = 0xFFFF;
@@ -366,10 +390,6 @@ int main(void)
     gpio_init_out(LED_PIN, 1);
 
     /* Configure uart */
-    gpio_init_out(UART_TX_PIN, 1);
-    gpio_init_in(UART_RX_PIN);
-    RPOR7bits.RP15R = 0x03;
-    RPINR18bits.U1RXR = 0x0E;
     uart_power_up(UART_1);
     uart_configure(UART_1, UART_BD_9600);
     uart_enable(UART_1);
@@ -382,8 +402,6 @@ int main(void)
 
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
-    gpio_init_out(I2C_SCL_PIN, 1);
-    gpio_init_out(I2C_SDA_PIN, 1);
     i2c_power_up(I2C_1);
     i2c_configure(I2C_1, I2C_FAST_SPEED);
     i2c_enable(I2C_1);
@@ -394,15 +412,6 @@ int main(void)
 
     /* Configure SD card */
     printf("Configuring SD card...");
-    gpio_init_out(MOSI_PIN, 0);
-    gpio_init_in(MISO_PIN);
-    gpio_init_out(SCK_PIN, 0);
-    gpio_init_out(CS_PIN, 1);
-
-    RPOR6bits.RP13R = 0x0007;
-    RPINR20bits.SDI1R = 0x0004;
-    RPOR3bits.RP6R = 0x0008;
-
     spi_power_up(SPI_1);
     spi_enable(SPI_1);
 
