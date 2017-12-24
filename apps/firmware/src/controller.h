@@ -23,6 +23,19 @@
 #include "config.h"
 #include "mpu6050/mpu6050.h"
 
-void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev);
+/**
+ * @brief Initialise controller
+ *
+ * @param[in] config
+ * @param[in] mpu6050_dev
+ */
+void controller_init(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev);
+
+/**
+ * @brief Run controller forever
+ *
+ * Note that this function does not return.
+ */
+void controller_run(void);
 
 #endif

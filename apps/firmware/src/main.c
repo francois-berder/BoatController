@@ -387,6 +387,8 @@ int main(void)
     radio_enable();
     printf("done\n");
 
+    controller_init(config, mpu6050_dev);
+
     printf("Initialisation finished\n");
 
     /* Change status LED depending on MPU6050 and SD card initialisation */
@@ -400,7 +402,7 @@ int main(void)
         status_set_mode(STATUS_THREE_PER_2SEC);
 
     printf("Starting controller\n");
-    controller_run(config, mpu6050_dev);
+    controller_run();
 
     return 0;
 }

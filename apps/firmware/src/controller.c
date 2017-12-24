@@ -122,10 +122,8 @@ static void log_mpu6050_frame(struct mpu6050_sample_t s)
         fat16_write(mpu6050_fd, buffer, ret);
 }
 
-void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev)
+void controller_init(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev)
 {
-    unsigned int counter = 0;
-
     if (config.sdcard_enabled)
         open_log_files();
 
@@ -133,6 +131,11 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
         mpu6050_fifo_init(mpu6050_dev, 1, 1);
         mpu6050_fifo_start();
     }
+}
+
+void controller_run(void)
+{
+    unsigned int counter = 0;
 
     while (1) {
         unsigned int update_output_frame = 0;
