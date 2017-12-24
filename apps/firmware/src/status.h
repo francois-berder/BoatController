@@ -34,8 +34,10 @@ enum STATUS_MODE {
  * @brief Configure the status LED
  *
  * The mode is set to STATUS_OFF
+ *
+ * @param[in] led_pin
  */
-void status_configure(void);
+void status_configure(unsigned int led_pin);
 
 /**
  * @brief Set the mode of the status LED

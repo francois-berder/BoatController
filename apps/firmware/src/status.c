@@ -22,8 +22,7 @@
 #include "periph_conf.h"
 #include "status.h"
 
-#define LED_PIN         (GPIO_PIN(PORT_B, 5))
-
+static volatile unsigned int led_pin;
 static enum STATUS_MODE mode;
 static uint8_t counter = 0;
 
@@ -38,21 +37,21 @@ void timer2_callback(void)
     case STATUS_FLASH:
         if (counter == 50)
             counter = 0;
-        gpio_write(LED_PIN, counter == 0);
+        gpio_write(led_pin, counter == 0);
         break;
     case STATUS_FAST_BLINK:
-        gpio_toggle(LED_PIN);
+        gpio_toggle(led_pin);
         break;
     case STATUS_ONE_PER_2SEC:
-        gpio_write(LED_PIN, counter < 2);
+        gpio_write(led_pin, counter < 2);
         if (counter == 19)
             counter = 0;
         break;
     case STATUS_TWO_PER_2SEC:
         if (counter < 6 && counter != 2 && counter != 3)
-            gpio_write(LED_PIN, 1);
+            gpio_write(led_pin, 1);
         else
-            gpio_write(LED_PIN, 0);
+            gpio_write(led_pin, 0);
 
         if (counter == 19)
             counter = 0;
@@ -60,9 +59,9 @@ void timer2_callback(void)
     case STATUS_THREE_PER_2SEC:
         if (counter < 10 && counter != 2 && counter != 3
         && counter != 6 && counter != 7)
-            gpio_write(LED_PIN, 1);
+            gpio_write(led_pin, 1);
         else
-            gpio_write(LED_PIN, 0);
+            gpio_write(led_pin, 0);
 
         if (counter == 19)
             counter = 0;
@@ -70,11 +69,11 @@ void timer2_callback(void)
     }
 }
 
-void status_configure(void)
+void status_configure(unsigned int _led_pin)
 {
     counter = 0;
     mode = STATUS_OFF;
-    gpio_init_out(LED_PIN, 0);
+    led_pin = _led_pin;
 
     /* Configure timer2 to trigger every 100ms */
     timer_power_up(TIMER_2);
@@ -89,10 +88,10 @@ void status_set_mode(enum STATUS_MODE _mode)
 
     switch (mode) {
     case STATUS_OFF:
-        gpio_write(LED_PIN, 0);
+        gpio_write(led_pin, 0);
         break;
     case STATUS_ON:
-        gpio_write(LED_PIN, 1);
+        gpio_write(led_pin, 1);
         break;
     case STATUS_FLASH:
     case STATUS_FAST_BLINK:
@@ -100,7 +99,7 @@ void status_set_mode(enum STATUS_MODE _mode)
     case STATUS_TWO_PER_2SEC:
     case STATUS_THREE_PER_2SEC:
         counter = 0;
-        gpio_write(LED_PIN, 1);
+        gpio_write(led_pin, 1);
 
         /* Start timer 2 only if we need it */
         timer_start(TIMER_2);

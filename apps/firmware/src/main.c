@@ -80,6 +80,9 @@
 #include "sdcard_cache/sdcard_cache.h"
 #include "status.h"
 
+/* Pin for status LED */
+#define LED_PIN         (GPIO_PIN(PORT_B, 5))
+
 /* Pins for UART interface */
 #define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
 #define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
@@ -115,6 +118,9 @@ static void configure_gpios(void)
     gpio_init_out(GPIO_PIN(PORT_A, 0), 0);
     gpio_init_out(GPIO_PIN(PORT_A, 1), 0);
     gpio_init_out(GPIO_PIN(PORT_A, 4), 0);
+
+    /* status LED */
+    gpio_init_out(LED_PIN, 0);
 
     /* UART1 */
     gpio_init_out(UART_TX_PIN, 1);
@@ -296,7 +302,7 @@ int main(void)
     timer1_configure(TIMER1_PRESCALER_1, 4000, 1);
     timer1_start();
 
-    status_configure();
+    status_configure(LED_PIN);
     status_set_mode(STATUS_FAST_BLINK);
 
     /* Configure uart */
