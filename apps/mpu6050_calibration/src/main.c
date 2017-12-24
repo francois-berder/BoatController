@@ -378,15 +378,7 @@ int main(void)
 
     /* Prepare MPU6050 device */
     mpu6050_dev.i2c_num = I2C_1;
-    mpu6050_dev.cdata.accel.offset.x = 0;
-    mpu6050_dev.cdata.accel.offset.y = 0;
-    mpu6050_dev.cdata.accel.offset.z = 0;
-    mpu6050_dev.cdata.accel.coeff.x = 16;
-    mpu6050_dev.cdata.accel.coeff.y = 16;
-    mpu6050_dev.cdata.accel.coeff.z = 16;
-    mpu6050_dev.cdata.gyro.offset.x = 0;
-    mpu6050_dev.cdata.gyro.offset.y = 0;
-    mpu6050_dev.cdata.gyro.offset.z = 0;
+    mpu6050_dev.cdata = mpu6050_create_default_calibration_data();
 
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
