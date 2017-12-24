@@ -124,6 +124,12 @@ static void log_mpu6050_frame(struct mpu6050_sample_t s)
 
 void controller_init(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev)
 {
+    output_configure();
+    output_enable();
+
+    radio_configure();
+    radio_enable();
+
     if (config.sdcard_enabled)
         open_log_files();
 

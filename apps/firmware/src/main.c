@@ -286,12 +286,6 @@ int main(void)
 
     printf(welcome_msg);
 
-    /* Configure output module */
-    printf("Configuring output module...");
-    output_configure();
-    output_enable();
-    printf("done\n");
-
     /* Prepare MPU6050 device */
     mpu6050_dev.i2c_num = I2C_1;
     mpu6050_dev.cdata.accel.offset.x = 0;
@@ -380,12 +374,6 @@ int main(void)
         if (load_calibration_data(&mpu6050_dev.cdata) < 0)
             printf("Failed to load calibration data from SD card.\n");
     }
-
-    /* Configure radio */
-    printf("Configuring radio...");
-    radio_configure();
-    radio_enable();
-    printf("done\n");
 
     controller_init(config, mpu6050_dev);
 
