@@ -130,7 +130,7 @@ void controller_run(struct board_config_t config, struct mpu6050_dev_t mpu6050_d
         open_log_files();
 
     if (config.mpu6050_enabled) {
-        mpu6050_fifo_init(mpu6050_dev);
+        mpu6050_fifo_init(mpu6050_dev, 1, 1);
         mpu6050_fifo_start();
     }
 
