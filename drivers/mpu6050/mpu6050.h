@@ -119,4 +119,12 @@ void mpu6050_power_up(struct mpu6050_dev_t *dev);
  */
 void mpu6050_power_down(struct mpu6050_dev_t *dev);
 
+/**
+ * @brief Create default calibration data
+ *
+ * This default calibration data does not rectify anything and leave data
+ * unchanged.
+ */
+struct mpu6050_calibration_data_t mpu6050_create_default_calibration_data(void);
+
 #endif

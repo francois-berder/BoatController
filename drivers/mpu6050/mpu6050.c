@@ -231,3 +231,20 @@ void mpu6050_power_down(struct mpu6050_dev_t *dev)
     reg |= SLEEP;
     write_8bit_reg(dev->i2c_num, PWR_MGMT_1, reg);
 }
+
+struct mpu6050_calibration_data_t mpu6050_create_default_calibration_data(void)
+{
+    struct mpu6050_calibration_data_t cdata;
+
+    cdata.accel.offset.x = 0;
+    cdata.accel.offset.y = 0;
+    cdata.accel.offset.z = 0;
+    cdata.accel.coeff.x = 16;
+    cdata.accel.coeff.y = 16;
+    cdata.accel.coeff.z = 16;
+    cdata.gyro.offset.x = 0;
+    cdata.gyro.offset.y = 0;
+    cdata.gyro.offset.z = 0;
+
+    return cdata;
+}
