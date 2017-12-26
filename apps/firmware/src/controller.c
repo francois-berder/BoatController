@@ -43,19 +43,20 @@ static int16_t speed_target = NEUTRAL_POS;
 
 static void open_log_files(void)
 {
-    char dirname[9];
+    char dirname[10];
     char filepath[32];
     unsigned int i;
 
     /* Create directory name: 8 random letters */
     crypto_power_up();
     crypto_enable();
-    crypto_get_random(dirname, 8);
+    crypto_get_random(&dirname[1], 8);
     crypto_disable();
     crypto_power_down();
-    for (i = 0; i < 8; ++i)
+    dirname[0] = '/';
+    for (i = 1; i < 9; ++i)
         dirname[i] = 'A' + (dirname[i] & 0xF);
-    dirname[8] = '\0';
+    dirname[9] = '\0';
 
     /* Create directory */
     if (fat16_mkdir(dirname) < 0) {
@@ -64,7 +65,7 @@ static void open_log_files(void)
     }
 
     /* Open file RADIO.TXT */
-    sprintf(filepath, "%s/%s", dirname, "RADIO.TXT");
+    sprintf(filepath, "/%s/%s", dirname, "RADIO.TXT");
     radio_fd = fat16_open(filepath, 'w');
     if (radio_fd < 0)
         printf("Cannot log I/O to file %s\n", filepath);
@@ -72,7 +73,7 @@ static void open_log_files(void)
         printf("Logging I/O to file %s\n", filepath);
 
     /* Open file OUTPUT.TXT */
-    sprintf(filepath, "%s/%s", dirname, "OUTPUT.TXT");
+    sprintf(filepath, "/%s/%s", dirname, "OUTPUT.TXT");
     output_fd = fat16_open(filepath, 'w');
     if (output_fd < 0)
         printf("Cannot log I/O to file %s\n", filepath);
@@ -80,7 +81,7 @@ static void open_log_files(void)
         printf("Logging I/O to file %s\n", filepath);
 
     /* Open file MPU6050.TXT */
-    sprintf(filepath, "%s/%s", dirname, "MPU6050.TXT");
+    sprintf(filepath, "/%s/%s", dirname, "MPU6050.TXT");
     mpu6050_fd = fat16_open(filepath, 'w');
     if (mpu6050_fd < 0)
         printf("Cannot log IMU data to file %s\n", filepath);
