@@ -20,6 +20,11 @@
 #include "periph/uart.h"
 #include "periph_conf.h"
 
+/* By default, let's enable IO on UART */
+#ifndef ENABLE_IO
+#define ENABLE_IO (1)
+#endif
+
 #ifndef IO_UART
 #define IO_UART UART_1
 #endif
@@ -30,7 +35,9 @@ int __attribute__((__section__(".libc.write"))) write(int handle, void *buffer, 
     case 0:
     case 1:
     case 2:
+#if ENABLE_IO
         uart_write(IO_UART, buffer, len);
+#endif
         break;
     default:
         break;
