@@ -73,7 +73,10 @@ uint16_t mcu_get_id(void);
 /**
  * @brief Short busy loop
  *
- * Note: Do not use it for precise timing
+ * Do not use it for precise timing.
+ * This function relies on the core timer.
+ * Hence, configure the relevant timer before
+ * calling this function or the mcu will get stuck !
  *
  * @param[in] ticks Number of ticks to wait
  */
