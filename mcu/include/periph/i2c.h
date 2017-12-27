@@ -33,6 +33,13 @@ enum I2C_SPEED {
     I2C_FAST_SPEED = 400000             /**< Fast speed 400kHz */
 };
 
+/** Define I2C return code */
+enum I2C_RET_CODE {
+    I2C_OK = 0,                         /**< Operation completed with success */
+    I2C_ERROR = -1,                     /**< An error occured during the operation */
+    I2C_TIMEOUT = -2                    /**< A timeout occured during the operation */
+};
+
 /**
  * @brief Initialise the I2C module
  *
