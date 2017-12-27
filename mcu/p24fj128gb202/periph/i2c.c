@@ -18,6 +18,7 @@
  */
 
 #include <xc.h>
+#include "core_timer.h"
 #include "mcu.h"
 #include "periph/i2c.h"
 #include "periph_conf.h"
@@ -36,7 +37,49 @@ static volatile uint16_t *base_address[I2C_COUNT] = {
     &I2C2RCV
 };
 
-static void wait_for_idle_bus(uint8_t i2c_num)
+/**
+ * @brief Check if operation timed out
+ *
+ * @retval 0 Not timed out
+ * @retval 1 Has timed out
+ */
+static int has_timed_out(uint32_t start, uint32_t deadline)
+{
+    uint32_t now;
+    int ret = 1;
+
+    if (start == deadline)
+        return 0;
+
+    /*
+     * Three cases need to be considered:
+     *
+     * |---S---N-D-----|
+     * |-----D-----S-N-|
+     * |--N--D-----S---|
+     *
+     * S: start
+     * D: deadline
+     * N: now
+     */
+    now = core_timer_get_ticks();
+    if ((start < deadline && now < deadline)
+    ||  (start > deadline && (now > start || now < deadline)))
+        ret = 0;
+
+    return ret;
+}
+
+/**
+ * @brief Wait that the bus is idle
+ *
+ * @param[in] i2c_num
+ * @param[in] start
+ * @param[in] deadline
+ * @retval 0 if successful
+ * @retval -2 if it timed out
+ */
+static int wait_for_idle_bus(uint8_t i2c_num, uint32_t start, uint32_t deadline)
 {
     while (I2CxCONL(i2c_num) &
            (_I2C1CONL_SEN_MASK
@@ -45,35 +88,80 @@ static void wait_for_idle_bus(uint8_t i2c_num)
             | _I2C1CONL_RCEN_MASK
             | _I2C1CONL_ACKEN_MASK)
            || (I2CxSTAT(i2c_num) & _I2C1STAT_TRSTAT_MASK)) {
+        if (has_timed_out(start, deadline))
+            return -2;
     }
+
+    return 0;
 }
 
-static int send_byte(uint8_t i2c_num, uint8_t data)
+/**
+ * @brief Send one byte
+ *
+ * @param[in] i2c_num
+ * @param[in] data
+ * @param[in] start
+ * @param[in] deadline
+ * @retval 0 if successful
+ * @retval -1 if an error occured (bus collision or NACK receveid)
+ * @retval -2 if timed out
+ */
+static int send_byte(uint8_t i2c_num, uint8_t data,
+                     uint32_t start, uint32_t deadline)
 {
+    int ret;
+
+    /* Start transmission */
     I2CxTRN(i2c_num) = data;
-    wait_for_idle_bus(i2c_num);
-    while (I2CxSTAT(i2c_num) & _I2C1STAT_TBF_MASK)
-        ;
+
+    ret = wait_for_idle_bus(i2c_num, start, deadline);
+    if (ret < 0)
+        return ret;
+
+    while (I2CxSTAT(i2c_num) & _I2C1STAT_TBF_MASK) {
+        if (has_timed_out(start, deadline))
+            return -2;
+    }
 
     if (I2CxSTAT(i2c_num) & _I2C1STAT_BCL_MASK          /* Collision detected */
     || I2CxSTAT(i2c_num) & _I2C1STAT_ACKSTAT_MASK)      /* NACK received */
-        return 0;
+        return -1;
 
-    return 1;
+    return 0;
 }
 
-static int receive_byte(uint8_t i2c_num, uint8_t *data, uint8_t nak)
+/**
+ * @brief Receive one byte
+ *
+ * @param[in] i2c_num
+ * @param[in] data
+ * @param[in] nak 0: send ACK, 1: send NACK
+ * @param[in] start
+ * @param[in] deadline
+ * @retval 0 if successful
+ * @retval -1 if an error occured
+ * @retval -2 it it timed out
+ */
+static int receive_byte(uint8_t i2c_num, uint8_t *data, uint8_t nak,
+                        uint32_t start, uint32_t deadline)
 {
+    int ret;
+
     I2CxCONL(i2c_num) |= _I2C1CONL_RCEN_MASK;
-    wait_for_idle_bus(i2c_num);
+
+    ret = wait_for_idle_bus(i2c_num, start, deadline);
+    if (ret < 0)
+        return ret;
 
     /* Wait for some data in RX FIFO */
-    while (!(I2CxSTAT(i2c_num) & _I2C1STAT_RBF_MASK))
-        ;
+    while (!(I2CxSTAT(i2c_num) & _I2C1STAT_RBF_MASK)) {
+        if (has_timed_out(start, deadline))
+            return -2;
+    }
 
     /* Check for a collision */
     if (I2CxSTAT(i2c_num) & _I2C1STAT_BCL_MASK)
-        return 0;
+        return -1;
 
     /* Send ACK/NAK */
     if (nak)
@@ -81,31 +169,69 @@ static int receive_byte(uint8_t i2c_num, uint8_t *data, uint8_t nak)
     else
         I2CxCONL(i2c_num) &= ~_I2C1CONL_ACKDT_MASK;
     I2CxCONL(i2c_num) |= _I2C1CONL_ACKEN_MASK;
-    wait_for_idle_bus(i2c_num);
+    ret = wait_for_idle_bus(i2c_num, start, deadline);
+    if (ret < 0)
+        return ret;
 
     *data = I2CxRCV(i2c_num);
-    return 1;
+    return 0;
 }
 
-static int send_address(uint8_t i2c_num, uint8_t address, uint8_t read_byte)
+/**
+ * @brief Send 7-bit address & read/write bit
+ *
+ * @param[in] i2c_num
+ * @param[in] address
+ * @param[in] read_byte 0: write, 1: read
+ * @param[in] start
+ * @param[in] deadline
+ * @retval 0 if successful
+ * @retval -2 if it timed out
+ */
+static int send_address(uint8_t i2c_num, uint8_t address, uint8_t read_byte,
+                        uint32_t start, uint32_t deadline)
 {
     uint8_t tmp = (address << 1) | (read_byte & 0x1);
 
-    return send_byte(i2c_num, tmp);
+    return send_byte(i2c_num, tmp, start, deadline);
 }
 
-static void send_start(uint8_t i2c_num)
+/**
+ * @brief Send start condition
+ *
+ * @param[in] i2c_num
+ * @param[in] start
+ * @param[in] deadline
+ * @retval 0 if successful
+ * @retval -2 if it timed out
+ */
+static int send_start(uint8_t i2c_num, uint32_t start, uint32_t deadline)
 {
     I2CxCONL(i2c_num) |= _I2C1CONL_SEN_MASK;
-    while (I2CxCONL(i2c_num) & _I2C1CONL_SEN_MASK)
-        ;
+    while (I2CxCONL(i2c_num) & _I2C1CONL_SEN_MASK) {
+        if (has_timed_out(start, deadline))
+            return -2;
+    }
+    return 0;
 }
 
-static void send_stop(uint8_t i2c_num)
+/**
+ * @brief Send stop condition
+ *
+ * @param[in] i2c_num
+ * @param[in] start
+ * @param[in] deadline
+ * @retval 0 if successful
+ * @retval -2 if it timed out
+ */
+static int send_stop(uint8_t i2c_num, uint32_t start, uint32_t deadline)
 {
     I2CxCONL(i2c_num) |= _I2C1CONL_PEN_MASK;
-    while (I2CxCONL(i2c_num) & _I2C1CONL_PEN_MASK)
-        ;
+    while (I2CxCONL(i2c_num) & _I2C1CONL_PEN_MASK) {
+        if (has_timed_out(start, deadline))
+            return -2;
+    }
+    return 0;
 }
 
 void i2c_configure(unsigned int i2c_num, uint32_t speed)
@@ -134,54 +260,77 @@ uint32_t i2c_get_speed(unsigned int i2c_num)
 
 int i2c_write(unsigned int i2c_num, uint8_t address, const void *buffer, uint32_t length)
 {
+    return i2c_write_safe(i2c_num, address, buffer, length, 0);
+}
+
+int i2c_write_safe(unsigned int i2c_num, uint8_t address, const void *buffer, uint32_t length, uint16_t timeout)
+{
     int ret = 0;
     const uint8_t *data = (const uint8_t *)buffer;
     const uint8_t *end = data + length;
+    const uint32_t start = core_timer_get_ticks();
+    const uint32_t deadline = start + timeout;
 
-    send_start(i2c_num);
-
-    if (send_address(i2c_num, address, WRITE_MODE) != 1) {
-        ret = -1;
+    ret = send_start(i2c_num, start, deadline);
+    if (ret < 0)
         goto i2c_write_end;
-    }
+
+    ret = send_address(i2c_num, address, WRITE_MODE, start, deadline);
+    if (ret < 0)
+        goto i2c_write_end;
 
     while (data != end) {
-        if (send_byte(i2c_num, *data++) != 1) {
-            ret = -1;
+        ret = send_byte(i2c_num, *data++, start, deadline);
+        if (ret < 0)
             goto i2c_write_end;
-        }
     }
 
 i2c_write_end:
-    send_stop(i2c_num);
+    if (ret < 0)            /* Do not overwrite ret */
+        send_stop(i2c_num, start, deadline);
+    else
+        ret = send_stop(i2c_num, start, deadline);
     return ret;
 }
 
 int i2c_read(unsigned int i2c_num, uint8_t address, void *buffer, uint32_t length)
 {
+    return i2c_read_safe(i2c_num, address, buffer, length, 0);
+}
+
+int i2c_read_safe(unsigned int i2c_num, uint8_t address, void *buffer, uint32_t length, uint16_t timeout)
+{
     int ret = 0;
     uint8_t *data = (uint8_t *)buffer;
-    uint32_t byte_received_count = 0;
+    const uint8_t *end = data + length;
+    const uint32_t start = core_timer_get_ticks();
+    const uint32_t deadline = start + timeout;
 
-    send_start(i2c_num);
-
-    if (send_address(i2c_num, address, READ_MODE) != 1) {
-        ret = -1;
+    ret = send_start(i2c_num, start, deadline);
+    if (ret < 0)
         goto i2c_read_end;
-    }
 
-    while (byte_received_count < length) {
-        if (receive_byte(i2c_num,
-                         &data[byte_received_count],
-                         (byte_received_count + 1) == length) != 1) {
-            ret = -1;
+    ret = send_address(i2c_num, address, READ_MODE, start, deadline);
+    if (ret < 0)
+        goto i2c_read_end;
+
+    while (data != end) {
+        uint8_t nak = 0;
+        if (data + 1 == end)
+            nak = 1;
+
+        ret = receive_byte(i2c_num, data++, nak,
+                           start, deadline);
+        if (ret < 0)
             goto i2c_read_end;
-        }
-        ++byte_received_count;
     }
 
 i2c_read_end:
-    send_stop(i2c_num);
+    if (ret < 0)            /* Do not overwrite ret */
+        send_stop(i2c_num, start, deadline);
+    else
+        ret = send_stop(i2c_num, start, deadline);
+
     return ret;
 }
 
