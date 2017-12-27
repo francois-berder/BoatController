@@ -75,6 +75,23 @@ void i2c_disable(unsigned int i2c_num);
 int i2c_write(unsigned int i2c_num, uint8_t address, const void *buffer, uint32_t length);
 
 /**
+ * @brief Send some bytes to a slave with timeout
+ *
+ * The I2C module must have been initialised before calling this function.
+ *
+ * @param[in] i2c_num Index of the I2C module
+ * @param[in] address 7-bit address of the slave
+ * @param[in] buffer Array of bytes to send
+ * @param[in] length Number of bytes to send
+ * @param[in] timeout Maximal number of ticks, write operation must take. If set to 0,
+ * timeout is disabled
+ * @retval 0 if all bytes were sent with success
+ * @retval -1 if it failed
+ * @retval -2 if it timed out
+ */
+int i2c_write_safe(unsigned int i2c_num, uint8_t address, const void *buffer, uint32_t length, uint16_t timeout);
+
+/**
  * @brief Read some bytes from a slave
  *
  * The I2C module must have been initialised before calling this function.
@@ -87,6 +104,23 @@ int i2c_write(unsigned int i2c_num, uint8_t address, const void *buffer, uint32_
  * @retval -1 if it failed
  */
 int i2c_read(unsigned int i2c_num, uint8_t address, void *buffer, uint32_t length);
+
+/**
+ * @brief Read some bytes from a slave
+ *
+ * The I2C module must have been initialised before calling this function.
+ *
+ * @param[in] i2c_num Index of the I2C module
+ * @param[in] address 7-bit address of the slave
+ * @param[in] buffer Array of bytes to receive
+ * @param[in] length Number of bytes to receive
+ * @param[in] timeout Maximal number of ticks read operation must take, if set to 0,
+ * timeout is disabled
+ * @retval 0 if all bytes were received with success
+ * @retval -1 if it failed
+ * @retval -2 if it timed out
+ */
+int i2c_read_safe(unsigned int i2c_num, uint8_t address, void *buffer, uint32_t length, uint16_t timeout);
 
 /**
  * @brief Power-up a I2C module
