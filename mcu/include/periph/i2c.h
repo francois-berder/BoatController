@@ -61,6 +61,17 @@ void i2c_enable(unsigned int i2c_num);
 void i2c_disable(unsigned int i2c_num);
 
 /**
+ * @brief Get clock frequency of I2C module
+ *
+ * Note that the speed returned by this function
+ * may not match the speed given to i2c_configure.
+ *
+ * @param[in] i2c_num Index of the I2C module
+ * @return clock frequency
+ */
+uint32_t i2c_get_speed(unsigned int num);
+
+/**
  * @brief Send some bytes to a slave
  *
  * The I2C module must have been initialised before calling this function.
