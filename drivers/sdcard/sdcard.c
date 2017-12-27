@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 #include <xc.h>
+#include "core_timer.h"
 #include "mcu.h"
 #include "periph/gpio.h"
 #include "periph/spi.h"
@@ -135,7 +136,7 @@ static int old_wakeup(struct sdcard_spi_dev_t *dev)
             break;
 
         /* Let's try again 10 ticks later if the card is not ready */
-        mcu_delay(10);
+        mcu_delay(TICKS_PER_SEC / 100);
     } while (attempt_count > 0 && response != 0);
 
     if (attempt_count == 0 && response != 0)
@@ -169,7 +170,7 @@ static int wakeup(struct sdcard_spi_dev_t *dev, uint8_t is_sdhc)
             break;
 
         /* Let's try again 10 ticks later if the card is not ready */
-        mcu_delay(10);
+        mcu_delay(TICKS_PER_SEC / 100);
     } while (attempt_count > 0 && response != 0);
 
     if (attempt_count == 0 && response != 0)
