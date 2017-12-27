@@ -89,10 +89,10 @@ static int wait_for_idle_bus(uint8_t i2c_num, uint32_t start, uint32_t deadline)
             | _I2C1CONL_ACKEN_MASK)
            || (I2CxSTAT(i2c_num) & _I2C1STAT_TRSTAT_MASK)) {
         if (has_timed_out(start, deadline))
-            return -2;
+            return I2C_ERROR;
     }
 
-    return 0;
+    return I2C_OK;
 }
 
 /**
@@ -120,14 +120,14 @@ static int send_byte(uint8_t i2c_num, uint8_t data,
 
     while (I2CxSTAT(i2c_num) & _I2C1STAT_TBF_MASK) {
         if (has_timed_out(start, deadline))
-            return -2;
+            return I2C_TIMEOUT;
     }
 
     if (I2CxSTAT(i2c_num) & _I2C1STAT_BCL_MASK          /* Collision detected */
     || I2CxSTAT(i2c_num) & _I2C1STAT_ACKSTAT_MASK)      /* NACK received */
-        return -1;
+        return I2C_ERROR;
 
-    return 0;
+    return I2C_OK;
 }
 
 /**
@@ -156,12 +156,12 @@ static int receive_byte(uint8_t i2c_num, uint8_t *data, uint8_t nak,
     /* Wait for some data in RX FIFO */
     while (!(I2CxSTAT(i2c_num) & _I2C1STAT_RBF_MASK)) {
         if (has_timed_out(start, deadline))
-            return -2;
+            return I2C_TIMEOUT;
     }
 
     /* Check for a collision */
     if (I2CxSTAT(i2c_num) & _I2C1STAT_BCL_MASK)
-        return -1;
+        return I2C_ERROR;
 
     /* Send ACK/NAK */
     if (nak)
@@ -174,7 +174,7 @@ static int receive_byte(uint8_t i2c_num, uint8_t *data, uint8_t nak,
         return ret;
 
     *data = I2CxRCV(i2c_num);
-    return 0;
+    return I2C_OK;
 }
 
 /**
@@ -210,9 +210,9 @@ static int send_start(uint8_t i2c_num, uint32_t start, uint32_t deadline)
     I2CxCONL(i2c_num) |= _I2C1CONL_SEN_MASK;
     while (I2CxCONL(i2c_num) & _I2C1CONL_SEN_MASK) {
         if (has_timed_out(start, deadline))
-            return -2;
+            return I2C_TIMEOUT;
     }
-    return 0;
+    return I2C_OK;
 }
 
 /**
@@ -229,9 +229,9 @@ static int send_stop(uint8_t i2c_num, uint32_t start, uint32_t deadline)
     I2CxCONL(i2c_num) |= _I2C1CONL_PEN_MASK;
     while (I2CxCONL(i2c_num) & _I2C1CONL_PEN_MASK) {
         if (has_timed_out(start, deadline))
-            return -2;
+            return I2C_TIMEOUT;
     }
-    return 0;
+    return I2C_OK;
 }
 
 void i2c_configure(unsigned int i2c_num, uint32_t speed)
@@ -265,7 +265,7 @@ int i2c_write(unsigned int i2c_num, uint8_t address, const void *buffer, uint32_
 
 int i2c_write_safe(unsigned int i2c_num, uint8_t address, const void *buffer, uint32_t length, uint16_t timeout)
 {
-    int ret = 0;
+    int ret = I2C_OK;
     const uint8_t *data = (const uint8_t *)buffer;
     const uint8_t *end = data + length;
     const uint32_t start = core_timer_get_ticks();
@@ -300,7 +300,7 @@ int i2c_read(unsigned int i2c_num, uint8_t address, void *buffer, uint32_t lengt
 
 int i2c_read_safe(unsigned int i2c_num, uint8_t address, void *buffer, uint32_t length, uint16_t timeout)
 {
-    int ret = 0;
+    int ret = I2C_OK;
     uint8_t *data = (uint8_t *)buffer;
     const uint8_t *end = data + length;
     const uint32_t start = core_timer_get_ticks();
