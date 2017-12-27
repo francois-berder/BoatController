@@ -67,29 +67,77 @@
 #define GYRO_Y_FIFO_EN      (0x20)
 #define GYRO_Z_FIFO_EN      (0x10)
 
-static uint8_t read_8bit_reg(unsigned int i2c_num, uint8_t address)
+static uint16_t compute_timeout(unsigned int i2c_num)
 {
-    uint8_t value;
+    uint32_t speed = i2c_get_speed(i2c_num);
+    uint16_t timeout;
 
-    i2c_write(i2c_num, MPU6050_ADDRESS, &address, 1);
-    i2c_read(i2c_num, MPU6050_ADDRESS, &value, sizeof(value));
+    /*
+     * We send at most 3 bytes during a i2c operation.
+     * So let's give it enough time such that timeout
+     * is greater than 24 i2c cycles.
+     */
+    timeout = (TICKS_PER_SEC << 5) / speed;
+    if (timeout == 0)
+        timeout = 1;
 
-    return value;
+    return timeout;
 }
 
-static void write_8bit_reg(unsigned int i2c_num, uint8_t address, uint8_t value)
+/**
+ * @brief Read content of a 8-bit register
+ *
+ * @param[in] i2c_num
+ * @param[in] address
+ * @param[out] data
+ * @param[in] timeout
+ * @return see i2c_write_safe/i2c_read_safe
+ */
+static int read_8bit_reg(unsigned int i2c_num, uint8_t address, uint8_t *data, uint16_t timeout)
+{
+    int ret;
+    ret = i2c_write_safe(i2c_num, MPU6050_ADDRESS, &address, sizeof(address), timeout);
+    if (ret < 0)
+        return ret;
+
+    return i2c_read_safe(i2c_num, MPU6050_ADDRESS, data, sizeof(*data), timeout);
+}
+
+/**
+ * @brief Write content of a 8-bit register
+ *
+ * @param[in] i2c_num
+ * @param[in] address
+ * @param[in] value
+ * @param[in] timeout
+ * @return see i2c_write_safe
+ */
+static int write_8bit_reg(unsigned int i2c_num, uint8_t address, uint8_t value, uint16_t timeout)
 {
     uint8_t buffer[2];
     buffer[0] = address;
     buffer[1] = value;
-    i2c_write(i2c_num, MPU6050_ADDRESS, buffer, sizeof(buffer));
+    return i2c_write_safe(i2c_num, MPU6050_ADDRESS, buffer, sizeof(buffer), timeout);
 }
 
+/**
+ * @brief Convert 2 8-bit values to little-endian 16-bit value
+ *
+ * @param[in] msb most significant byte
+ * @param[in] lsb least significant byte
+ * @return 16-bit value
+ */
 static uint16_t to_le(uint8_t msb, uint8_t lsb)
 {
     return (msb << 8) | lsb;
 }
 
+/**
+ * @brief Use calibration data to rectify accelerometer data
+ *
+ * @param[in] dev
+ * @param[in|out] sample
+ */
 static void rectify_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
 {
     int32_t x, y, z;
@@ -117,6 +165,12 @@ static void rectify_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *samp
     sample->accel.z = z >> 4;
 }
 
+/**
+ * @brief Use calibration data to rectify gyroscope data
+ *
+ * @param[in] dev
+ * @param[in|out] sample
+ */
 static void rectify_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
 {
     sample->gyro.x -= dev->cdata.gyro.offset.x;
@@ -126,50 +180,72 @@ static void rectify_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sam
 
 int mpu6050_init(struct mpu6050_dev_t *dev, unsigned int enable_acc, unsigned int enable_gyro)
 {
-    if (read_8bit_reg(dev->i2c_num, WHO_AM_I) != MPU6050_DEVICE_ID)
+    uint16_t timeout = compute_timeout(dev->i2c_num);
+    uint8_t id;
+
+    if (read_8bit_reg(dev->i2c_num, WHO_AM_I, &id, timeout) < 0)
+        return -1;
+
+    if (id != MPU6050_DEVICE_ID)
         return -1;
 
     /* Reset device - clears most registers to 0 */
-    write_8bit_reg(dev->i2c_num, PWR_MGMT_1, RESET);
+    if (write_8bit_reg(dev->i2c_num, PWR_MGMT_1, RESET, timeout) < 0)
+        return -1;
     mcu_delay(TICKS_PER_SEC / 20);
 
     /* Wake up from sleep */
-    write_8bit_reg(dev->i2c_num, PWR_MGMT_1, 0);
+    if (write_8bit_reg(dev->i2c_num, PWR_MGMT_1, 0, timeout) < 0)
+        return -1;
     mcu_delay(TICKS_PER_SEC / 100);
 
     /* Disable temperature sensor */
-    write_8bit_reg(dev->i2c_num, PWR_MGMT_1, TEMP_DIS);
+    if (write_8bit_reg(dev->i2c_num, PWR_MGMT_1, TEMP_DIS, timeout) < 0)
+        return -1;
 
-    write_8bit_reg(dev->i2c_num, CONFIG, 0);
+    /* */
+    if (write_8bit_reg(dev->i2c_num, CONFIG, 0, timeout) < 0)
+        return -1;
 
     /* Configure accelerometer */
     if (enable_acc) {
-        write_8bit_reg(dev->i2c_num, ACCEL_CONFIG, ACCEL_RANGE_4G);
+        if (write_8bit_reg(dev->i2c_num, ACCEL_CONFIG, ACCEL_RANGE_4G, timeout) < 0)
+            return -1;
     } else {
-        uint8_t reg = read_8bit_reg(dev->i2c_num, PWR_MGMT_2);
+        uint8_t reg;
+
+        if (read_8bit_reg(dev->i2c_num, PWR_MGMT_2, &reg, timeout) < 0)
+            return -1;
         reg |= (STBY_XA | STBY_YA | STBY_ZA);
-        write_8bit_reg(dev->i2c_num, PWR_MGMT_2, reg);
+        if (write_8bit_reg(dev->i2c_num, PWR_MGMT_2, reg, timeout) < 0)
+            return -1;
     }
 
     /* Configure gyroscope */
     if (enable_gyro) {
-        write_8bit_reg(dev->i2c_num, GYRO_CONFIG, GYRO_RANGE_500);
+        if (write_8bit_reg(dev->i2c_num, GYRO_CONFIG, GYRO_RANGE_500, timeout) < 0)
+            return -1;
     } else {
-        uint8_t reg = read_8bit_reg(dev->i2c_num, PWR_MGMT_2);
+        uint8_t reg;
+        if (read_8bit_reg(dev->i2c_num, PWR_MGMT_2, &reg, timeout) < 0)
+            return -1;
         reg |= (STBY_XG | STBY_YG | STBY_ZG);
-        write_8bit_reg(dev->i2c_num, PWR_MGMT_2, reg);
+        if (write_8bit_reg(dev->i2c_num, PWR_MGMT_2, reg, timeout) < 0)
+            return -1;
     }
 
     return 0;
 }
 
-void mpu6050_get_acc_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
+int mpu6050_get_acc_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
 {
     uint8_t buffer[14];
     uint8_t address = ACCEL_X_HIGH;
+    uint16_t timeout = compute_timeout(dev->i2c_num);
 
-    i2c_write(dev->i2c_num, MPU6050_ADDRESS, &address, 1);
-    i2c_read(dev->i2c_num, MPU6050_ADDRESS, buffer, sizeof(buffer));
+    if (i2c_write_safe(dev->i2c_num, MPU6050_ADDRESS, &address, 1, timeout) < 0
+    ||  i2c_read_safe(dev->i2c_num, MPU6050_ADDRESS, buffer, sizeof(buffer), timeout) < 0)
+        return -1;
 
     /* Fill accelerometer data */
     sample->accel.x = to_le(buffer[0], buffer[1]);
@@ -185,15 +261,19 @@ void mpu6050_get_acc_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sa
 
     rectify_acc(dev, sample);
     rectify_gyro(dev, sample);
+
+    return 0;
 }
 
-void mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
+int mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
 {
     uint8_t buffer[6];
     uint8_t address = ACCEL_X_HIGH;
+    uint16_t timeout = compute_timeout(dev->i2c_num);
 
-    i2c_write(dev->i2c_num, MPU6050_ADDRESS, &address, 1);
-    i2c_read(dev->i2c_num, MPU6050_ADDRESS, buffer, sizeof(buffer));
+    if (i2c_write_safe(dev->i2c_num, MPU6050_ADDRESS, &address, 1, timeout) < 0
+    ||  i2c_read_safe(dev->i2c_num, MPU6050_ADDRESS, buffer, sizeof(buffer), timeout) < 0)
+        return -1;
 
     /* Fill accelerometer data */
     sample->accel.x = to_le(buffer[0], buffer[1]);
@@ -201,15 +281,19 @@ void mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
     sample->accel.z = to_le(buffer[4], buffer[5]);
 
     rectify_acc(dev, sample);
+
+    return 0;
 }
 
-void mpu6050_get_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
+int mpu6050_get_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
 {
     uint8_t buffer[6];
     uint8_t address = GYRO_X_HIGH;
+    uint16_t timeout = compute_timeout(dev->i2c_num);
 
-    i2c_write(dev->i2c_num, MPU6050_ADDRESS, &address, 1);
-    i2c_read(dev->i2c_num, MPU6050_ADDRESS, buffer, sizeof(buffer));
+    if (i2c_write_safe(dev->i2c_num, MPU6050_ADDRESS, &address, 1, timeout) < 0
+    ||  i2c_read_safe(dev->i2c_num, MPU6050_ADDRESS, buffer, sizeof(buffer), timeout) < 0)
+        return -1;
 
     /* Fill gyroscope data */
     sample->gyro.x = to_le(buffer[0], buffer[1]);
@@ -217,20 +301,28 @@ void mpu6050_get_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample
     sample->gyro.z = to_le(buffer[4], buffer[5]);
 
     rectify_gyro(dev, sample);
+
+    return 0;
 }
 
 void mpu6050_power_up(struct mpu6050_dev_t *dev)
 {
-    uint8_t reg = read_8bit_reg(dev->i2c_num, PWR_MGMT_1);
+    uint16_t timeout = compute_timeout(dev->i2c_num);
+    uint8_t reg;
+    if (read_8bit_reg(dev->i2c_num, PWR_MGMT_1, &reg, timeout) < 0)
+        return;
     reg &= ~SLEEP;
-    write_8bit_reg(dev->i2c_num, PWR_MGMT_1, reg);
+    write_8bit_reg(dev->i2c_num, PWR_MGMT_1, reg, timeout);
 }
 
 void mpu6050_power_down(struct mpu6050_dev_t *dev)
 {
-    uint8_t reg = read_8bit_reg(dev->i2c_num, PWR_MGMT_1);
+    uint16_t timeout = compute_timeout(dev->i2c_num);
+    uint8_t reg;
+    if (read_8bit_reg(dev->i2c_num, PWR_MGMT_1, &reg, timeout) < 0)
+        return;
     reg |= SLEEP;
-    write_8bit_reg(dev->i2c_num, PWR_MGMT_1, reg);
+    write_8bit_reg(dev->i2c_num, PWR_MGMT_1, reg, timeout);
 }
 
 struct mpu6050_calibration_data_t mpu6050_create_default_calibration_data(void)

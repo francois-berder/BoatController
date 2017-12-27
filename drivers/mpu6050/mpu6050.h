@@ -72,6 +72,7 @@ struct mpu6050_dev_t {
  * @param[in] dev
  * @param[in] enable_acc 0 to disable accelerometer, 1 to enable it
  * @param[in] enable_gyro 0 to disable gyroscope, 1 to enable it
+ * @param[in] 0 if successful, -1 otherwise
  */
 int mpu6050_init(struct mpu6050_dev_t *dev, unsigned int enable_acc, unsigned int enable_gyro);
 
@@ -82,8 +83,9 @@ int mpu6050_init(struct mpu6050_dev_t *dev, unsigned int enable_acc, unsigned in
  *
  * @param[in] dev
  * @param[out] sample
+ * @param[in] 0 if successful, -1 otherwise
  */
-void mpu6050_get_acc_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
+int mpu6050_get_acc_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
 
 /**
  * @brief Get accelerometer readings from the MPU6050
@@ -92,8 +94,9 @@ void mpu6050_get_acc_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sa
  *
  * @param[in] dev
  * @param[out] sample Only accelerometer data will be valid
+ * @param[in] 0 if successful, -1 otherwise
  */
-void mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
+int mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
 
 /**
  * @brief Get gyroscope readings from the MPU6050
@@ -102,8 +105,9 @@ void mpu6050_get_acc(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample)
  *
  * @param[in] dev
  * @param[out] sample Only gyroscope data will be valid
+ * @param[in] 0 if successful, -1 otherwise
  */
-void mpu6050_get_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
+int mpu6050_get_gyro(struct mpu6050_dev_t *dev, struct mpu6050_sample_t *sample);
 
 /**
  * @brief Power up MPU6050
