@@ -51,18 +51,25 @@ void timer5_callback(void)
 #endif
 {
     unsigned int index;
+    int ret;
 
     if (sample_count >= MPU6050_FIFO_DEPTH)
         return;
 
     index = (fifo_start_index + sample_count) & (MPU6050_FIFO_DEPTH - 1);
     if (features & (MPU6050_FIFO_ACC_ENABLED | MPU6050_FIFO_GYRO_ENABLED))
-        mpu6050_get_acc_gyro(&dev, &samples[index]);
+        ret = mpu6050_get_acc_gyro(&dev, &samples[index]);
     else if (features & MPU6050_FIFO_ACC_ENABLED)
-        mpu6050_get_acc(&dev, &samples[index]);
+        ret = mpu6050_get_acc(&dev, &samples[index]);
     else if (features & MPU6050_FIFO_GYRO_ENABLED)
-        mpu6050_get_gyro(&dev, &samples[index]);
-    ++sample_count;
+        ret = mpu6050_get_gyro(&dev, &samples[index]);
+    else
+        return;
+
+    if (ret == 0)
+        ++sample_count;
+    else                    /* Stop driver if something went wrong */
+        mpu6050_fifo_stop();
 }
 
 void mpu6050_fifo_init(struct mpu6050_dev_t _dev, unsigned int use_acc, unsigned int use_gyro)
