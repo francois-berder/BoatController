@@ -29,10 +29,12 @@
 /**
  * @brief Return the number of ticks
  *
- * Since the core timer is dependent on timer 1,
- * it only works if timer 1 has been configured and
- * enabled.
- * Tick counter is incremented at each timer 1 interrupt
+ * Since the core timer is dependent on a timer, depending
+ * on the value of CORE_TIMER_NUM macro. By default, this
+ * macro has value 1, so timer 1 is used.
+ *
+ * The timer must have been configured and enabled.
+ * Tick counter is incremented at each timer interrupt
  *
  * @return Ticks
  */

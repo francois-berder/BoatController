@@ -19,9 +19,24 @@
 
 #include "core_timer.h"
 
+/* By default, let's use timer 1 */
+#ifndef CORE_TIMER_NUM
+#define CORE_TIMER_NUM  (1)
+#endif
+
 static uint32_t ticks;
 
+#if CORE_TIMER_NUM == 1
 void timer1_callback(void)
+#elif CORE_TIMER_NUM == 2
+void timer2_callback(void)
+#elif CORE_TIMER_NUM == 3
+void timer3_callback(void)
+#elif CORE_TIMER_NUM == 4
+void timer4_callback(void)
+#elif CORE_TIMER_NUM == 5
+void timer5_callback(void)
+#endif
 {
     ++ticks;
 }
