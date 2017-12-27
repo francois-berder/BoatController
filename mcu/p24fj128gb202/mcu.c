@@ -18,8 +18,8 @@
  */
 
 #include <xc.h>
-#include "mcu.h"
 #include "core_timer.h"
+#include "mcu.h"
 
 static uint32_t system_clock;
 
