@@ -17,6 +17,7 @@
  * along with pic24-framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "core_timer.h"
 #include "mcu.h"
 #include "mpu6050.h"
 #include "periph/gpio.h"
@@ -130,11 +131,11 @@ int mpu6050_init(struct mpu6050_dev_t *dev, unsigned int enable_acc, unsigned in
 
     /* Reset device - clears most registers to 0 */
     write_8bit_reg(dev->i2c_num, PWR_MGMT_1, RESET);
-    mcu_delay(50);
+    mcu_delay(TICKS_PER_SEC / 20);
 
     /* Wake up from sleep */
     write_8bit_reg(dev->i2c_num, PWR_MGMT_1, 0);
-    mcu_delay(10);
+    mcu_delay(TICKS_PER_SEC / 100);
 
     /* Disable temperature sensor */
     write_8bit_reg(dev->i2c_num, PWR_MGMT_1, TEMP_DIS);
