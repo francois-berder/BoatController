@@ -125,6 +125,13 @@ void i2c_disable(unsigned int i2c_num)
     I2CxCONL(i2c_num) &= ~_I2C1CONL_I2CEN_MASK;
 }
 
+uint32_t i2c_get_speed(unsigned int i2c_num)
+{
+    uint32_t speed = mcu_get_system_clock() >> 1;
+    speed /= I2CxBRG(i2c_num) + 2;
+    return speed;
+}
+
 int i2c_write(unsigned int i2c_num, uint8_t address, const void *buffer, uint32_t length)
 {
     int ret = 0;
