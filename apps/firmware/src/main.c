@@ -353,7 +353,18 @@ int main(void)
         REFOCONL = _REFOCONL_ROEN_MASK;
         spi_disable(config.sdcard_dev.spi_num);
         SPI1BRGL = 0;
-        SPI1CON1 |= _SPI1CON1_MCLKEN_MASK;
+
+        switch (config.sdcard_dev.spi_num) {
+        case SPI_1:
+            SPI1CON1 |= _SPI1CON1_MCLKEN_MASK;
+            break;
+        case SPI_2:
+            SPI2CON1 |= _SPI2CON1_MCLKEN_MASK;
+            break;
+        case SPI_3:
+            SPI3CON1 |= _SPI3CON1_MCLKEN_MASK;
+            break;
+        }
         spi_enable(config.sdcard_dev.spi_num);
 
         printf("done\n");
