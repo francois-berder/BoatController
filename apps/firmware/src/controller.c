@@ -24,6 +24,8 @@
 #include "mcu.h"
 #include "output.h"
 #include "periph/crypto.h"
+#include "periph/spi.h"
+#include "periph_conf.h"
 #include "radio.h"
 #include "sdcard_cache/sdcard_cache.h"
 
@@ -146,6 +148,24 @@ void controller_run(void)
 
     while (1) {
         unsigned int update_output_frame = 0;
+
+        /* Check if the SD card is working correctly */
+        {
+            struct sdcard_cache_stats_t stats = sdcard_cache_get_stats();
+            if (stats.write_error || stats.read_error) {
+                fat16_close(radio_fd);
+                fat16_close(mpu6050_fd);
+                fat16_close(output_fd);
+
+                radio_fd = -1;
+                mpu6050_fd = -1;
+                output_fd = -1;
+
+                /* Disable SPI module since we won't use it anymore */
+                spi_disable(SPI_1);
+                spi_power_down(SPI_1);
+            }
+        }
 
         /* Process all frames available from the radio */
         while (radio_has_frame()) {
