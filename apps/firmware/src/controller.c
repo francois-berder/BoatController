@@ -178,17 +178,19 @@ void controller_run(void)
         }
 
         /* Process all frames available from the radio */
-        while (radio_has_frame()) {
-            struct radio_frame_t radio_frame = radio_get_frame();
-            angular_speed_target = radio_frame.dir;
-            speed_target = radio_frame.speed;
-            angular_speed_target -= NEUTRAL_POS;
-            speed_target -= NEUTRAL_POS;
+        {
+            struct radio_frame_t frame;
+            while (radio_get_frame(&frame)) {
+                angular_speed_target = frame.dir;
+                speed_target = frame.speed;
+                angular_speed_target -= NEUTRAL_POS;
+                speed_target -= NEUTRAL_POS;
 
-            update_output_frame = 1;
+                update_output_frame = 1;
 
-            if (radio_fd >= 0)
-                log_radio_frame(radio_frame);
+                if (radio_fd >= 0)
+                    log_radio_frame(frame);
+            }
         }
 
         /* Process all samples available from MPU6050 FIFO */

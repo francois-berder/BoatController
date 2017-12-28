@@ -45,7 +45,7 @@ void radio_enable(void);
 void radio_disable(void);
 
 /**
- * @retval 0 No frame is avaialble
+ * @retval 0 No frame is available
  * @retval 1 A frame is available
  */
 uint8_t radio_has_frame(void);
@@ -53,11 +53,10 @@ uint8_t radio_has_frame(void);
 /**
  * @brief Retrieve a frame from radio module FIFO
  *
- * Do **not** call this function if no frame is avaiable.
- * Check frame availability with radio_has_frame.
- *
- * @return a radio frame
+ * @param[in] frame
+ * @retval 0 No frame was retrieved (FIFO is empty)
+ * @retval 1 A frame was retrieved
  */
-struct radio_frame_t radio_get_frame(void);
+int radio_get_frame(struct radio_frame_t *frame);
 
 #endif

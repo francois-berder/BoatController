@@ -122,13 +122,18 @@ uint8_t radio_has_frame(void)
     return tmp != available_frame;
 }
 
-struct radio_frame_t radio_get_frame(void)
+int radio_get_frame(struct radio_frame_t *frame)
 {
     unsigned int index = available_frame;
+    int ret = 0;
 
     mcu_disable_interrupts();
-    available_frame = (available_frame + 1) & 0x3;
+    if (available_frame != current_frame) {
+        *frame = frames[index];
+        available_frame = (available_frame + 1) & 0x3;
+        ret = 1;
+    }
     mcu_enable_interrupts();
 
-    return frames[index];
+    return ret;
 }
