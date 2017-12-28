@@ -98,6 +98,11 @@ void mpu6050_fifo_stop(void)
     timer_power_down(MPU6050_FIFO_TIMER_NUM);
 }
 
+int mpu6050_fifo_is_running(void)
+{
+    return timer_is_running(MPU6050_FIFO_TIMER_NUM);
+}
+
 void mpu6050_fifo_clear_samples(void)
 {
     mcu_disable_interrupts();

@@ -47,6 +47,14 @@ void mpu6050_fifo_start(void);
 void mpu6050_fifo_stop(void);
 
 /**
+ * @brief Check whether driver is running or not
+ *
+ * @retval 0 not running
+ * @retval 1 running
+ */
+int mpu6050_fifo_is_running(void);
+
+/**
  * @brief Clear all samples in the FIFO
  */
 void mpu6050_fifo_clear_samples(void);
