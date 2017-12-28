@@ -370,7 +370,8 @@ int main(void)
 
         partition_offset = find_fat16_partition(&config.sdcard_dev);
         if (partition_offset > 0) {
-            partition_offset <<= 9;
+            /* Convert partition_offset from block to byte */
+            partition_offset *= SDCARD_BLOCK_LENGTH;
             fat16_init(dev, partition_offset);
         } else {
             config.sdcard_enabled = 0;
