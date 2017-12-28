@@ -23,6 +23,15 @@
 #include <stdint.h>
 #include "sdcard/sdcard.h"
 
+/** Keep various information about cache behavior */
+struct sdcard_cache_stats_t {
+    uint32_t evictions;         /**< Number of evictions from cache */
+    uint32_t write_success;     /**< Number of successful writes */
+    uint32_t read_success;      /**< Number of successful reads */
+    uint32_t write_error;       /**< Number of erroneous writes */
+    uint32_t read_error;        /**< Number of erroneous reads */
+};
+
 /**
  * @brief Initialise SD card cache
  *
@@ -77,5 +86,10 @@ int sdcard_cache_seek(uint32_t address);
  *   - cache entry eviction works in an optimal fashion
  */
 void sdcard_cache_flush(void);
+
+/**
+ * @return Statistics of the SD card cache
+ */
+struct sdcard_cache_stats_t sdcard_cache_get_stats(void);
 
 #endif

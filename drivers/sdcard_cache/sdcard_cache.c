@@ -34,6 +34,7 @@ struct cache_entry_t {
 };
 static struct cache_entry_t cache[CACHE_ENTRY_COUNT];
 static uint32_t current_address;
+static struct sdcard_cache_stats_t stats;
 
 static unsigned int load_block(void)
 {
@@ -73,9 +74,15 @@ static unsigned int load_block(void)
             }
         }
 
+        ++stats.evictions;
+
         /* Write back evicted block to SD card */
-        if (cache[cache_index].status & CACHE_ENTRY_DIRTY_FLAG)
-            sdcard_write_block(&dev, cache[cache_index].block, cache[cache_index].sector);
+        if (cache[cache_index].status & CACHE_ENTRY_DIRTY_FLAG) {
+            if (sdcard_write_block(&dev, cache[cache_index].block, cache[cache_index].sector) < 0)
+                ++stats.write_error;
+            else
+                ++stats.write_success;
+        }
 
         /*
          * Reset counters of all valid entries.
@@ -90,7 +97,10 @@ static unsigned int load_block(void)
     /* Initialise cache entry */
     cache[cache_index].status = CACHE_ENTRY_VALID_FLAG;
     cache[cache_index].sector = sector;
-    sdcard_read_block(&dev, cache[cache_index].block, sector);
+    if (sdcard_read_block(&dev, cache[cache_index].block, sector) < 0)
+        ++stats.read_error;
+    else
+        ++stats.read_success;
 
     return cache_index;
 }
@@ -106,6 +116,13 @@ void sdcard_cache_init(struct sdcard_spi_dev_t _dev)
         cache[i].status &= ~CACHE_ENTRY_VALID_FLAG;
 
     current_address = 0;
+
+    /* Set to 0 all stats */
+    stats.evictions = 0;
+    stats.read_success = 0;
+    stats.write_success = 0;
+    stats.read_error = 0;
+    stats.write_error = 0;
 }
 
 int sdcard_cache_read(void *buffer, uint32_t length)
@@ -176,7 +193,11 @@ void sdcard_cache_flush(void)
     for (i = 0; i < CACHE_ENTRY_COUNT; ++i) {
         if (cache[i].status & CACHE_ENTRY_VALID_FLAG
         &&  cache[i].status & CACHE_ENTRY_DIRTY_FLAG) {
-            sdcard_write_block(&dev, cache[i].block, cache[i].sector);
+            if (sdcard_write_block(&dev, cache[i].block, cache[i].sector) < 0)
+                ++stats.write_error;
+            else
+                ++stats.write_success;
+
             cache[i].status &= ~CACHE_ENTRY_DIRTY_FLAG;
         }
     }
@@ -184,4 +205,9 @@ void sdcard_cache_flush(void)
     /* Reset all counters */
     for (i = 0; i < CACHE_ENTRY_COUNT; ++i)
         cache[i].status &= ~CACHE_ENTRY_COUNTER_MASK;
+}
+
+struct sdcard_cache_stats_t sdcard_cache_get_stats(void)
+{
+    return stats;
 }
