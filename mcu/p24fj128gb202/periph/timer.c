@@ -166,6 +166,28 @@ void timer_stop(unsigned int timer_num)
     }
 }
 
+int timer_is_running(unsigned int timer_num)
+{
+    int running = 0;
+
+    switch (timer_num) {
+    case TIMER_2:
+        running = !!(T2CON & _T2CON_TON_MASK);
+        break;
+    case TIMER_3:
+        running = !!(T3CON & _T3CON_TON_MASK);
+        break;
+    case TIMER_4:
+        running = !!(T4CON & _T4CON_TON_MASK);
+        break;
+    case TIMER_5:
+        running = !!(T5CON & _T5CON_TON_MASK);
+        break;
+    }
+
+    return running;
+}
+
 uint32_t timer_get_period(unsigned int timer_num)
 {
     uint64_t period = 0;
