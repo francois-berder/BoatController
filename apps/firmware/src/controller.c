@@ -153,6 +153,10 @@ void controller_run(void)
     while (1) {
         unsigned int update_output_frame = 0;
 
+        /* Check if mpu6050 FIFO stopped running */
+        if (config.mpu6050_enabled && !mpu6050_fifo_is_running())
+            config.mpu6050_enabled = 0;
+
         /* Check if the SD card is working correctly */
         if (config.sdcard_enabled) {
             struct sdcard_cache_stats_t stats = sdcard_cache_get_stats();
