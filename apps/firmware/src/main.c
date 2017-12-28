@@ -318,16 +318,16 @@ int main(void)
 
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
-    i2c_power_up(I2C_1);
-    i2c_configure(I2C_1, I2C_FAST_SPEED);
-    i2c_enable(I2C_1);
+    i2c_power_up(mpu6050_dev.i2c_num);
+    i2c_configure(mpu6050_dev.i2c_num, I2C_FAST_SPEED);
+    i2c_enable(mpu6050_dev.i2c_num);
     if (!mpu6050_init(&mpu6050_dev, 1, 1)) {
         printf("done\n");
     } else {
         printf("failed\n");
         config.mpu6050_enabled = 0;
-        i2c_disable(I2C_1);
-        i2c_power_down(I2C_1);
+        i2c_disable(mpu6050_dev.i2c_num);
+        i2c_power_down(mpu6050_dev.i2c_num);
     }
 
     /* Configure SD card */
