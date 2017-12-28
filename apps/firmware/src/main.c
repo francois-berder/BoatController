@@ -332,10 +332,10 @@ int main(void)
 
     /* Configure SD card */
     printf("Configuring SD card...");
-    spi_power_up(SPI_1);
-    spi_enable(SPI_1);
     sdcard_dev.spi_num = SPI_1;
     sdcard_dev.cs_pin = CS_PIN;
+    spi_power_up(sdcard_dev.spi_num);
+    spi_enable(sdcard_dev.spi_num);
     if (!sdcard_init(&sdcard_dev)) {
         /*
         * Increase clock frequency:
@@ -344,10 +344,10 @@ int main(void)
         */
         PMD4 &= ~_PMD4_REFOMD_MASK;
         REFOCONL = _REFOCONL_ROEN_MASK;
-        spi_disable(SPI_1);
+        spi_disable(sdcard_dev.spi_num);
         SPI1BRGL = 0;
         SPI1CON1 |= _SPI1CON1_MCLKEN_MASK;
-        spi_enable(SPI_1);
+        spi_enable(sdcard_dev.spi_num);
 
         printf("done\n");
     } else {
@@ -371,8 +371,8 @@ int main(void)
     }
 
     if (!config.sdcard_enabled) {
-        spi_disable(SPI_1);
-        spi_power_down(SPI_1);
+        spi_disable(sdcard_dev.spi_num);
+        spi_power_down(sdcard_dev.spi_num);
     }
 
     /* Attempt to retrieve calibration data for MPU6050 from SD card */
