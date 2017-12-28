@@ -35,6 +35,8 @@
 
 #define NEUTRAL_POS     (6000)
 
+struct board_config_t config;
+
 /* File descriptors */
 static int radio_fd = -1;
 static int output_fd = -1;
@@ -125,8 +127,10 @@ static void log_mpu6050_frame(struct mpu6050_sample_t s)
         fat16_write(mpu6050_fd, buffer, ret);
 }
 
-void controller_init(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev)
+void controller_init(struct board_config_t _config)
 {
+    config = _config;
+
     output_configure();
     output_enable();
 
@@ -137,7 +141,7 @@ void controller_init(struct board_config_t config, struct mpu6050_dev_t mpu6050_
         open_log_files();
 
     if (config.mpu6050_enabled) {
-        mpu6050_fifo_init(mpu6050_dev, 1, 1);
+        mpu6050_fifo_init(config.mpu6050_dev, 1, 1);
         mpu6050_fifo_start();
     }
 }
@@ -150,7 +154,7 @@ void controller_run(void)
         unsigned int update_output_frame = 0;
 
         /* Check if the SD card is working correctly */
-        {
+        if (config.sdcard_enabled) {
             struct sdcard_cache_stats_t stats = sdcard_cache_get_stats();
             if (stats.write_error || stats.read_error) {
                 fat16_close(radio_fd);
@@ -162,8 +166,10 @@ void controller_run(void)
                 output_fd = -1;
 
                 /* Disable SPI module since we won't use it anymore */
-                spi_disable(SPI_1);
-                spi_power_down(SPI_1);
+                spi_disable(config.sdcard_dev.spi_num);
+                spi_power_down(config.sdcard_dev.spi_num);
+
+                config.sdcard_enabled = 0;
             }
         }
 
@@ -182,7 +188,7 @@ void controller_run(void)
         }
 
         /* Process all samples available from MPU6050 FIFO */
-        {
+        if (config.mpu6050_enabled) {
             struct mpu6050_sample_t s;
             while (mpu6050_fifo_get_sample(&s) == 1) {
                 if (mpu6050_fd >= 0)

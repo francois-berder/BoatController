@@ -112,6 +112,21 @@ static struct storage_dev_t dev = {
     sdcard_cache_seek
 };
 
+static struct board_config_t create_default_board_config(void)
+{
+    struct board_config_t config;
+
+    config.mpu6050_enabled = 1;
+    config.mpu6050_dev.i2c_num = I2C_1;
+    config.mpu6050_dev.cdata = mpu6050_create_default_calibration_data();
+
+    config.sdcard_enabled = 1;
+    config.sdcard_dev.spi_num = SPI_1;
+    config.sdcard_dev.cs_pin = CS_PIN;
+
+    return config;
+}
+
 static void configure_gpios(void)
 {
     /* Configure unused I/O as output low */
@@ -279,9 +294,7 @@ static int load_calibration_data(struct mpu6050_calibration_data_t *cdata)
 
 int main(void)
 {
-    struct board_config_t config = {1, 1};
-    struct mpu6050_dev_t mpu6050_dev;
-    struct sdcard_spi_dev_t sdcard_dev;
+    struct board_config_t config = create_default_board_config();
 
     mcu_set_system_clock(8000000LU);
 
@@ -312,31 +325,25 @@ int main(void)
 
     printf(welcome_msg);
 
-    /* Prepare MPU6050 device */
-    mpu6050_dev.i2c_num = I2C_1;
-    mpu6050_dev.cdata = mpu6050_create_default_calibration_data();
-
     /* Configure MPU6050 device */
     printf("Configuring MPU6050 device...");
-    i2c_power_up(mpu6050_dev.i2c_num);
-    i2c_configure(mpu6050_dev.i2c_num, I2C_FAST_SPEED);
-    i2c_enable(mpu6050_dev.i2c_num);
-    if (!mpu6050_init(&mpu6050_dev, 1, 1)) {
+    i2c_power_up(config.mpu6050_dev.i2c_num);
+    i2c_configure(config.mpu6050_dev.i2c_num, I2C_FAST_SPEED);
+    i2c_enable(config.mpu6050_dev.i2c_num);
+    if (!mpu6050_init(&config.mpu6050_dev, 1, 1)) {
         printf("done\n");
     } else {
         printf("failed\n");
         config.mpu6050_enabled = 0;
-        i2c_disable(mpu6050_dev.i2c_num);
-        i2c_power_down(mpu6050_dev.i2c_num);
+        i2c_disable(config.mpu6050_dev.i2c_num);
+        i2c_power_down(config.mpu6050_dev.i2c_num);
     }
 
     /* Configure SD card */
     printf("Configuring SD card...");
-    sdcard_dev.spi_num = SPI_1;
-    sdcard_dev.cs_pin = CS_PIN;
-    spi_power_up(sdcard_dev.spi_num);
-    spi_enable(sdcard_dev.spi_num);
-    if (!sdcard_init(&sdcard_dev)) {
+    spi_power_up(config.sdcard_dev.spi_num);
+    spi_enable(config.sdcard_dev.spi_num);
+    if (!sdcard_init(&config.sdcard_dev)) {
         /*
         * Increase clock frequency:
         *  - Use system clock for SPI module
@@ -344,10 +351,10 @@ int main(void)
         */
         PMD4 &= ~_PMD4_REFOMD_MASK;
         REFOCONL = _REFOCONL_ROEN_MASK;
-        spi_disable(sdcard_dev.spi_num);
+        spi_disable(config.sdcard_dev.spi_num);
         SPI1BRGL = 0;
         SPI1CON1 |= _SPI1CON1_MCLKEN_MASK;
-        spi_enable(sdcard_dev.spi_num);
+        spi_enable(config.sdcard_dev.spi_num);
 
         printf("done\n");
     } else {
@@ -358,10 +365,10 @@ int main(void)
     if (config.sdcard_enabled) {
         uint32_t partition_offset;
         printf("Configuring SD card cache...");
-        sdcard_cache_init(sdcard_dev);
+        sdcard_cache_init(config.sdcard_dev);
         printf("done\n");
 
-        partition_offset = find_fat16_partition(&sdcard_dev);
+        partition_offset = find_fat16_partition(&config.sdcard_dev);
         if (partition_offset > 0) {
             partition_offset <<= 9;
             fat16_init(dev, partition_offset);
@@ -371,17 +378,17 @@ int main(void)
     }
 
     if (!config.sdcard_enabled) {
-        spi_disable(sdcard_dev.spi_num);
-        spi_power_down(sdcard_dev.spi_num);
+        spi_disable(config.sdcard_dev.spi_num);
+        spi_power_down(config.sdcard_dev.spi_num);
     }
 
     /* Attempt to retrieve calibration data for MPU6050 from SD card */
     if (config.mpu6050_enabled && config.sdcard_enabled) {
-        if (load_calibration_data(&mpu6050_dev.cdata) < 0)
+        if (load_calibration_data(&config.mpu6050_dev.cdata) < 0)
             printf("Failed to load calibration data from SD card.\n");
     }
 
-    controller_init(config, mpu6050_dev);
+    controller_init(config);
 
     printf("Initialisation finished\n");
 

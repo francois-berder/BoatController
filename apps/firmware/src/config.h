@@ -21,10 +21,14 @@
 #define __CONFIG_H__
 
 #include <stdint.h>
+#include "mpu6050/mpu6050.h"
+#include "sdcard/sdcard.h"
 
 struct board_config_t {
     uint8_t mpu6050_enabled;
     uint8_t sdcard_enabled;
+    struct mpu6050_dev_t mpu6050_dev;
+    struct sdcard_spi_dev_t sdcard_dev;
 };
 
 #endif

@@ -27,9 +27,8 @@
  * @brief Initialise controller
  *
  * @param[in] config
- * @param[in] mpu6050_dev
  */
-void controller_init(struct board_config_t config, struct mpu6050_dev_t mpu6050_dev);
+void controller_init(struct board_config_t config);
 
 /**
  * @brief Run controller forever
