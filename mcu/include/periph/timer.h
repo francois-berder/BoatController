@@ -65,6 +65,14 @@ void timer_start(unsigned int timer_num);
 void timer_stop(unsigned int timer_num);
 
 /**
+ * @brief Check whether a timer is running or not
+ *
+ * @retval 0 timer is not running
+ * @retval 1 timer is running
+ */
+int timer_is_running(unsigned int timer_num);
+
+/**
  * @brief Get period in nanoseconds
  *
  * @param[in] timer_num
