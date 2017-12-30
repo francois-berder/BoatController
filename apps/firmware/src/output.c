@@ -134,13 +134,13 @@ void output_enable(void)
 
 void output_disable(void)
 {
+    timer_stop(TIMER_3);
+    timer_stop(TIMER_4);
+
     gpio_write(LEFT_RUDDER_PIN, 0);
     gpio_write(RIGHT_RUDDER_PIN, 0);
     gpio_write(LEFT_MOTOR_PIN, 0);
     gpio_write(RIGHT_MOTOR_PIN, 0);
-
-    timer_stop(TIMER_3);
-    timer_stop(TIMER_4);
 }
 
 void output_set_frame(struct output_frame_t frame)
