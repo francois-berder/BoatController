@@ -22,7 +22,7 @@
 
 void crypto_get_random(void *dst, uint32_t length)
 {
-    uint16_t *buffer = (uint16_t *)dst;
+    uint8_t *buffer = (uint8_t *)dst;
 
     /* Configure crypto module to generate random numbers */
     CRYCONL &= ~_CRYCONL_OPMOD_MASK;
@@ -34,13 +34,21 @@ void crypto_get_random(void *dst, uint32_t length)
             ;
 
         *buffer++ = CRYTXTA0;
+        *buffer++ = CRYTXTA0 >> 8;
         *buffer++ = CRYTXTA1;
+        *buffer++ = CRYTXTA1 >> 8;
         *buffer++ = CRYTXTA2;
+        *buffer++ = CRYTXTA2 >> 8;
         *buffer++ = CRYTXTA3;
+        *buffer++ = CRYTXTA3 >> 8;
         *buffer++ = CRYTXTA4;
+        *buffer++ = CRYTXTA4 >> 8;
         *buffer++ = CRYTXTA5;
+        *buffer++ = CRYTXTA5 >> 8;
         *buffer++ = CRYTXTA6;
+        *buffer++ = CRYTXTA6 >> 8;
         *buffer++ = CRYTXTA7;
+        *buffer++ = CRYTXTA7 >> 8;
 
         length -= 16;
     }
@@ -51,40 +59,46 @@ void crypto_get_random(void *dst, uint32_t length)
             ;
 
         *buffer++ = CRYTXTA0;
+        *buffer++ = CRYTXTA0 >> 8;
         length -= 2;
 
         if (length >= 2) {
             *buffer++ = CRYTXTA1;
+            *buffer++ = CRYTXTA1 >> 8;
             length -= 2;
         }
         if (length >= 2) {
             *buffer++ = CRYTXTA2;
+            *buffer++ = CRYTXTA2 >> 8;
             length -= 2;
         }
         if (length >= 2) {
             *buffer++ = CRYTXTA3;
+            *buffer++ = CRYTXTA3 >> 8;
             length -= 2;
         }
         if (length >= 2) {
             *buffer++ = CRYTXTA4;
+            *buffer++ = CRYTXTA4 >> 8;
             length -= 2;
         }
         if (length >= 2) {
             *buffer++ = CRYTXTA5;
+            *buffer++ = CRYTXTA5 >> 8;
             length -= 2;
         }
         if (length >= 2) {
             *buffer++ = CRYTXTA6;
+            *buffer++ = CRYTXTA6 >> 8;
             length -= 2;
         }
     }
 
     if (length) {
-        uint8_t *last = (uint8_t *)buffer;
         CRYCONL |= _CRYCONL_CRYGO_MASK;
         while (CRYCONL & _CRYCONL_CRYGO_MASK)
             ;
-        *last = CRYTXTA0;
+        *buffer++ = CRYTXTA0;
     }
 }
 
