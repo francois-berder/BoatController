@@ -342,6 +342,7 @@ int main(void)
     /* Configure SD card */
     printf("Configuring SD card...");
     spi_power_up(config.sdcard_dev.spi_num);
+    spi_configure(config.sdcard_dev.spi_num, 400000, SPI_MODE_0);
     spi_enable(config.sdcard_dev.spi_num);
     if (!sdcard_init(&config.sdcard_dev)) {
         /*
