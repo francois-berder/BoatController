@@ -47,20 +47,19 @@ static int16_t speed_target = NEUTRAL_POS;
 
 static void open_log_files(void)
 {
-    char dirname[10];
+    char dirname[9];
     char filepath[32];
     unsigned int i;
 
     /* Create directory name: 8 random letters */
     crypto_power_up();
     crypto_enable();
-    crypto_get_random(&dirname[1], 8);
+    crypto_get_random(dirname, 8);
     crypto_disable();
     crypto_power_down();
-    dirname[0] = '/';
-    for (i = 1; i < 9; ++i)
+    for (i = 0; i < 8; ++i)
         dirname[i] = 'A' + (dirname[i] & 0xF);
-    dirname[9] = '\0';
+    dirname[8] = '\0';
 
     /* Create directory */
     if (fat16_mkdir(dirname) < 0) {
