@@ -185,8 +185,6 @@ int sdcard_init(struct sdcard_spi_dev_t *dev)
     uint8_t is_sdhc = 0;
     int ret;
 
-    spi_configure(dev->spi_num, 400000, SPI_MODE_0);
-
     /* Send 160 clock cycles */
     spi_transfer(dev->spi_num, NULL, NULL, 20);
 
