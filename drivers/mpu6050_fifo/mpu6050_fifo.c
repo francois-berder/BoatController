@@ -57,7 +57,7 @@ void timer5_callback(void)
         return;
 
     index = (fifo_start_index + sample_count) & (MPU6050_FIFO_DEPTH - 1);
-    if (features & (MPU6050_FIFO_ACC_ENABLED | MPU6050_FIFO_GYRO_ENABLED))
+    if ((features & MPU6050_FIFO_ACC_ENABLED) && (features & MPU6050_FIFO_GYRO_ENABLED))
         ret = mpu6050_get_acc_gyro(&dev, &samples[index]);
     else if (features & MPU6050_FIFO_ACC_ENABLED)
         ret = mpu6050_get_acc(&dev, &samples[index]);
