@@ -124,13 +124,11 @@ unsigned int mpu6050_fifo_get_sample_count(void)
 
 int mpu6050_fifo_get_sample(struct mpu6050_sample_t *sample)
 {
-    unsigned int index;
-    unsigned int ret = 0;
+    int ret = 0;
 
     mcu_disable_interrupts();
     if (sample_count > 0) {
-        index = (fifo_start_index + sample_count) & (MPU6050_FIFO_DEPTH - 1);
-        *sample = samples[index];
+        *sample = samples[fifo_start_index];
         ++fifo_start_index;
         fifo_start_index &= (MPU6050_FIFO_DEPTH - 1);
         --sample_count;
