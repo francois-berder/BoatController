@@ -153,8 +153,10 @@ void controller_run(void)
         unsigned int update_output_frame = 0;
 
         /* Check if mpu6050 FIFO stopped running */
-        if (config.mpu6050_enabled && !mpu6050_fifo_is_running())
+        if (config.mpu6050_enabled && !mpu6050_fifo_is_running()) {
             config.mpu6050_enabled = 0;
+            printf("MPU6050 FIFO stopped running.\n");
+        }
 
         /* Check if the SD card is working correctly */
         if (config.sdcard_enabled) {
@@ -173,6 +175,7 @@ void controller_run(void)
                 spi_power_down(config.sdcard_dev.spi_num);
 
                 config.sdcard_enabled = 0;
+                printf("Errors occured while using SD card.\nStop using SD card.\n");
             }
         }
 
