@@ -70,14 +70,16 @@
 static uint16_t compute_timeout(unsigned int i2c_num)
 {
     uint32_t speed = i2c_get_speed(i2c_num);
-    uint16_t timeout;
+    uint32_t timeout;
 
     /*
-     * We send at most 3 bytes during a i2c operation.
+     * We send at most 15 bytes during a i2c operation.
      * So let's give it enough time such that timeout
      * is greater than 24 i2c cycles.
      */
-    timeout = (TICKS_PER_SEC << 5) / speed;
+    timeout = TICKS_PER_SEC;
+    timeout *= 120;
+    timeout /= speed;
     if (timeout == 0)
         timeout = 1;
 
