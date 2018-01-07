@@ -25,6 +25,7 @@
 struct radio_frame_t {
     uint16_t dir;
     uint16_t speed;
+    uint32_t t;         /**< ticks when frame was created */
 };
 
 /**

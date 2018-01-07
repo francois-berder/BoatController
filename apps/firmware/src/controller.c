@@ -102,8 +102,8 @@ static void open_log_files(void)
 static void log_radio_frame(struct radio_frame_t rf)
 {
     char buffer[64];
-    int ret = sprintf(buffer, "%u, %u\n",
-                      rf.dir, rf.speed);
+    int ret = sprintf(buffer, "%lu, %u, %u\n",
+                      rf.t, rf.dir, rf.speed);
     if (ret >= 0)
         fat16_write(radio_fd, buffer, ret);
 }

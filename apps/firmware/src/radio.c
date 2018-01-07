@@ -18,6 +18,7 @@
  */
 
 #include <xc.h>
+#include "core_timer.h"
 #include "mcu.h"
 #include "periph/gpio.h"
 #include "periph/ic.h"
@@ -44,8 +45,10 @@ static void push_frame(void)
     unsigned int tmp = (current_frame + 1) & 0x3;
 
     /* If we have a buffer overflow, drop this frame */
-    if (tmp != available_frame)
+    if (tmp != available_frame) {
+        frames[current_frame].t = core_timer_get_ticks();
         current_frame = tmp;
+    }
 
     flags = 0;
 }
