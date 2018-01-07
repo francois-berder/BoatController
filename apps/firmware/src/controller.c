@@ -183,10 +183,22 @@ void controller_run(void)
         {
             struct radio_frame_t frame;
             while (radio_get_frame(&frame)) {
-                angular_speed_target = frame.dir;
-                speed_target = frame.speed;
-                angular_speed_target -= NEUTRAL_POS;
-                speed_target -= NEUTRAL_POS;
+                /* Ignore the 2 least significant bits */
+                frame.dir &= ~0x3;
+                frame.speed &= ~0x3;
+
+                /* IIR filter */
+                if (frame.dir >= 3800 && frame.dir <= 8200) {
+                    angular_speed_target += NEUTRAL_POS;
+                    angular_speed_target = (angular_speed_target + frame.dir) >> 1;
+                    angular_speed_target -= NEUTRAL_POS;
+                }
+
+                if (frame.speed >= 3800 && frame.speed <= 8200) {
+                    speed_target += NEUTRAL_POS;
+                    speed_target = (speed_target + frame.speed) >> 1;
+                    speed_target -= NEUTRAL_POS;
+                }
 
                 update_output_frame = 1;
 
