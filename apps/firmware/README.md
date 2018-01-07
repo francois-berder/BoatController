@@ -17,9 +17,9 @@ In ```RADIO.TXT```, the controller saves all radio frames using the following fo
 radio_dir, radio_speed
 ```
 
-In ```OUTPUT.TXT```, the controller saves all output frames using the following format  (all entries are unsigned 16-bit integers):
+In ```OUTPUT.TXT```, the controller saves all output frames using the following format  (all entries are unsigned 16-bit integers except the first one):
 ```
-left_rudder, right_rudder, left_motor, right_motor
+ticks, left_rudder, right_rudder, left_motor, right_motor
 ```
 
 In ```MPU6050.TXT```, the controller saves all samples from the MPU6050 using the following format (all entries are signed 16-bit integers):

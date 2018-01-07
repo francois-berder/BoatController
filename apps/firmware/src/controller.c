@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include "controller.h"
+#include "core_timer.h"
 #include "fat16/fat16.h"
 #include "mpu6050_fifo/mpu6050_fifo.h"
 #include "mcu.h"
@@ -107,11 +108,11 @@ static void log_radio_frame(struct radio_frame_t rf)
         fat16_write(radio_fd, buffer, ret);
 }
 
-static void log_output_frame(struct output_frame_t of)
+static void log_output_frame(uint32_t t, struct output_frame_t of)
 {
     char buffer[128];
-    int ret = sprintf(buffer, "%u, %u, %u, %u\n",
-                      of.left_rudder, of.right_rudder, of.left_motor, of.right_motor);
+    int ret = sprintf(buffer, "%lu, %u, %u, %u, %u\n",
+                      t, of.left_rudder, of.right_rudder, of.left_motor, of.right_motor);
     if (ret >= 0)
         fat16_write(output_fd, buffer, ret);
 }
@@ -218,6 +219,7 @@ void controller_run(void)
 
         if (update_output_frame) {
             struct output_frame_t output_frame;
+            uint32_t t = core_timer_get_ticks();
             output_frame.left_rudder = angular_speed_target + NEUTRAL_POS;
             output_frame.right_rudder = angular_speed_target + NEUTRAL_POS;
             output_frame.left_motor = speed_target + NEUTRAL_POS;
@@ -225,7 +227,7 @@ void controller_run(void)
             output_set_frame(output_frame);
 
             if (output_fd >= 0)
-                log_output_frame(output_frame);
+                log_output_frame(t, output_frame);
         }
 
         /* Ensure that logs are periodically saved to SD card */
