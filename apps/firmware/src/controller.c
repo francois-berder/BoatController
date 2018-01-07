@@ -120,7 +120,8 @@ static void log_output_frame(uint32_t t, struct output_frame_t of)
 static void log_mpu6050_frame(struct mpu6050_sample_t s)
 {
     char buffer[128];
-    int ret = sprintf(buffer, "%d, %d, %d, %d, %d, %d\n",
+    int ret = sprintf(buffer, "%lu, %d, %d, %d, %d, %d, %d\n",
+                      s.t,
                       s.accel.x, s.accel.y, s.accel.z,
                       s.gyro.x, s.gyro.y, s.gyro.z);
     if (ret >= 0)

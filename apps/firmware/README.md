@@ -22,9 +22,9 @@ In ```OUTPUT.TXT```, the controller saves all output frames using the following 
 ticks, left_rudder, right_rudder, left_motor, right_motor
 ```
 
-In ```MPU6050.TXT```, the controller saves all samples from the MPU6050 using the following format (all entries are signed 16-bit integers):
+In ```MPU6050.TXT```, the controller saves all samples from the MPU6050 using the following format (all entries are signed 16-bit integers except the first one):
 ```
-accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z
+ticks, accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z
 ```
 
 ticks is a unsigned 32-bit integer when indicates when the frame was created. It has a resolution of 1 ms.

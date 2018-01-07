@@ -23,6 +23,7 @@
 #include <stdint.h>
 
 struct mpu6050_sample_t {
+    uint32_t t;
     struct {
         int16_t x;
         int16_t y;

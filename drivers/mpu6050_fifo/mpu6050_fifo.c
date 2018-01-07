@@ -17,6 +17,7 @@
  * along with pic24-framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "core_timer.h"
 #include "mcu.h"
 #include "mpu6050_fifo/mpu6050_fifo.h"
 #include "periph/timer.h"
@@ -57,6 +58,7 @@ void timer5_callback(void)
         return;
 
     index = (fifo_start_index + sample_count) & (MPU6050_FIFO_DEPTH - 1);
+    samples[index].t = core_timer_get_ticks();
     if ((features & MPU6050_FIFO_ACC_ENABLED) && (features & MPU6050_FIFO_GYRO_ENABLED))
         ret = mpu6050_get_acc_gyro(&dev, &samples[index]);
     else if (features & MPU6050_FIFO_ACC_ENABLED)
