@@ -43,6 +43,13 @@ static int radio_fd = -1;
 static int output_fd = -1;
 static int mpu6050_fd = -1;
 
+/*
+ * Compute delta between radio direction frames
+ * It is used to check if radio contact is good
+ */
+static int16_t delta_radio_buffer[16];
+static int16_t last_dir = NEUTRAL_POS;
+
 static int16_t angular_speed_target = NEUTRAL_POS;
 static int16_t speed_target = NEUTRAL_POS;
 
@@ -185,9 +192,34 @@ void controller_run(void)
         {
             struct radio_frame_t frame;
             while (radio_get_frame(&frame)) {
+                unsigned int i;
+                unsigned int bad_delta_count = 0;
+
+                update_output_frame = 1;
+
+
                 /* Ignore the 2 least significant bits */
                 frame.dir &= ~0x3;
                 frame.speed &= ~0x3;
+
+                /* Add to buffer */
+                for (i = 15; i > 0; --i)
+                    delta_radio_buffer[i] = delta_radio_buffer[i - 1];
+                delta_radio_buffer[0] = ((int16_t)frame.dir) - last_dir;
+                last_dir = frame.dir;
+
+                /* Find out if radio contact is loss */
+                for (i = 0; i < 16; ++i) {
+                    if (delta_radio_buffer[i] > 1000 || delta_radio_buffer[i] < -1000)
+                        ++bad_delta_count;
+                }
+
+                /* If we lost radio contact, let's stop the boat */
+                if (bad_delta_count >= 6) {
+                    angular_speed_target = 0;
+                    speed_target = 0;
+                    continue;
+                }
 
                 /* IIR filter */
                 if (frame.dir >= 3800 && frame.dir <= 8200) {
@@ -201,8 +233,6 @@ void controller_run(void)
                     speed_target = (speed_target + frame.speed) >> 1;
                     speed_target -= NEUTRAL_POS;
                 }
-
-                update_output_frame = 1;
 
                 if (radio_fd >= 0)
                     log_radio_frame(frame);

@@ -59,7 +59,7 @@ void ic1_callback(void)
     unsigned int dir = dir_buf - dir_buf_prev;
     dir_buf_prev = dir_buf;
 
-    if (dir >= 3500 && dir <= 8500) {
+    if (dir < 20000) {
         flags |= DIR_RECEIVED_FLAG;
         frames[current_frame].dir = dir;
     }
@@ -74,7 +74,7 @@ void ic2_callback(void)
     unsigned int speed = speed_buf - speed_buf_prev;
     speed_buf_prev = speed_buf;
 
-    if (speed >= 3500 && speed <= 8500) {
+    if (speed < 20000) {
         flags |= SPEED_RECEIVED_FLAG;
         frames[current_frame].speed = speed;
     }
