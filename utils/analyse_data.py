@@ -7,9 +7,42 @@ Run analysis: ./analyse_samples.py <out>
 """
 
 import csv
+import math
 import sys
 import matplotlib.pyplot as plt
 
+GYRO_SENSITIVITY = 65.5
+ACCEL_SENSITIVITY = 8192.0
+
+
+def compute_pitch_roll_angles(t, accel_x_data, accel_y_data, accel_z_data,
+                              gyro_x_data, gyro_y_data, alpha):
+    n = len(gyro_x_data)
+    pitch_data = [0.0] * (n + 1)
+    roll_data = [0.0] * (n + 1)
+
+    # Use accelerometer data to find 1st angle
+    ax = (accel_x_data[0] + accel_x_data[1] + accel_x_data[2] + accel_x_data[3]) / 4.0
+    ay = (accel_y_data[0] + accel_y_data[1] + accel_y_data[2] + accel_y_data[3]) / 4.0
+    az = (accel_z_data[0] + accel_z_data[1] + accel_z_data[2] + accel_z_data[3]) / 4.0
+    pitch_data[0] = - math.atan2(ax, az) * 180.0 / math.pi
+    roll_data[0] = math.atan2(ay, az) * 180.0 / math.pi
+
+    for i in range(0, n):
+        dt = t[i + 1] - t[i]
+        pitch_data[i + 1] = pitch_data[i]
+        pitch_data[i + 1] += gyro_x_data[i] * dt
+
+        roll_data[i + 1] = roll_data[i]
+        roll_data[i + 1] += gyro_y_data[i] * dt
+
+        roll_acc = math.atan2(accel_x_data[i], accel_z_data[i]) * 180.0 / math.pi
+        pitch_acc = math.atan2(accel_y_data[i], accel_z_data[i]) * 180.0 / math.pi
+
+        pitch_data[i + 1] = alpha * pitch_data[i + 1] - (1.0 - alpha) * roll_acc
+        roll_data[i + 1] = alpha * roll_data[i + 1] + (1.0 - alpha) * pitch_acc
+
+    return (pitch_data, roll_data)
 
 def analyse_radio_data(indir):
     """
@@ -99,12 +132,12 @@ def analyse_mpu6050_data(indir):
 
     ticks = columns[0]
     t = [float(t) * 0.001 for t in ticks]
-    accel_x_data = columns[1]
-    accel_y_data = columns[2]
-    accel_z_data = columns[3]
-    gyro_x_data = columns[4]
-    gyro_y_data = columns[5]
-    gyro_z_data = columns[6]
+    accel_x_data = [float(ax) / ACCEL_SENSITIVITY for ax in columns[1]]
+    accel_y_data = [float(ay) / ACCEL_SENSITIVITY for ay in columns[2]]
+    accel_z_data = [float(az) / ACCEL_SENSITIVITY for az in columns[3]]
+    gyro_x_data = [float(gx) / GYRO_SENSITIVITY for gx in columns[4]]
+    gyro_y_data = [float(gy) / GYRO_SENSITIVITY for gy in columns[5]]
+    gyro_z_data = [float(gz) / GYRO_SENSITIVITY for gz in columns[6]]
 
     # Plot raw accel data
     plt.figure(1)
@@ -122,6 +155,7 @@ def analyse_mpu6050_data(indir):
 
     plt.tight_layout()
     plt.xlabel('time (s)')
+    plt.ylabel('acceleration (g)')
     plt.savefig('{}/accel.png'.format(indir))
 
     # Plot raw gyro data
@@ -140,28 +174,39 @@ def analyse_mpu6050_data(indir):
 
     plt.tight_layout()
     plt.xlabel('time (s)')
+    plt.ylabel('angular speed (deg/s)')
     plt.savefig('{}/gyro.png'.format(indir))
 
     # Plot angles (no filtering)
     t.insert(0, t[0])
-    n = len(rows)
-    pitch_data = [0.0] * (n + 1)
-    roll_data = [0.0] * (n + 1)
-    heading_data = [0.0] * (n + 1)
+    (pitch_gyro_data, roll_gyro_data) = \
+        compute_pitch_roll_angles(t, accel_x_data, accel_y_data, accel_z_data,
+                                  gyro_x_data, gyro_y_data, 1.0)
+    (pitch_acc_data, roll_acc_data) = \
+        compute_pitch_roll_angles(t, accel_x_data, accel_y_data, accel_z_data,
+                                  gyro_x_data, gyro_y_data, 0.0)
+    (pitch_filtered_data, roll_filtered_data) = \
+        compute_pitch_roll_angles(t, accel_x_data, accel_y_data, accel_z_data,
+                                  gyro_x_data, gyro_y_data, 0.98)
 
+    n = len(gyro_x_data)
+    heading_data = [0.0] * (n + 1)
     for i in range(0, n):
-        pitch_data[i + 1] = pitch_data[i] + gyro_x_data[i]
-        roll_data[i + 1] = roll_data[i] + gyro_y_data[i]
-        heading_data[i + 1] = heading_data[i] + gyro_z_data[i]
+        dt = t[i + 1] - t[i]
+        heading_data[i + 1] = heading_data[i] + gyro_z_data[i] * dt
 
     plt.figure(3)
     roll_plot = plt.subplot(3, 1, 1)
     roll_plot.set_title('roll')
-    roll_plot.plot(t, roll_data, label='roll')
+    roll_plot.plot(t, roll_gyro_data, label='roll (gyro)')
+    roll_plot.plot(t, roll_acc_data, label='roll (accel)')
+    roll_plot.plot(t, roll_filtered_data, label='roll (filtered)')
 
     pitch_plot = plt.subplot(3, 1, 2)
     pitch_plot.set_title('pitch')
-    pitch_plot.plot(t, pitch_data, label='pitch')
+    pitch_plot.plot(t, pitch_gyro_data, label='pitch (gyro)')
+    pitch_plot.plot(t, pitch_acc_data, label='pitch (accel)')
+    pitch_plot.plot(t, pitch_filtered_data, label='pitch (filtered)')
 
     heading_plot = plt.subplot(3, 1, 3)
     heading_plot.set_title('heading')
@@ -169,6 +214,7 @@ def analyse_mpu6050_data(indir):
 
     plt.tight_layout()
     plt.xlabel('time (s)')
+    plt.ylabel('angle (deg)')
     plt.savefig('{}/angles.png'.format(indir))
 
 if len(sys.argv) != 2:
