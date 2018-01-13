@@ -114,8 +114,8 @@ def analyse_output_data(indir):
     right_motor_plot.set_ylim([3500, 8500])
     right_motor_plot.plot(t, right_motor_data, label='right_motor')
 
-    plt.tight_layout()
     plt.xlabel('time (s)')
+    plt.tight_layout()
     plt.savefig('{}/output.png'.format(indir))
 
 def analyse_mpu6050_data(indir):
@@ -153,9 +153,9 @@ def analyse_mpu6050_data(indir):
     accel_z_plot.set_title('accel z')
     accel_z_plot.plot(t, accel_z_data, label='accel_z')
 
-    plt.tight_layout()
     plt.xlabel('time (s)')
     plt.ylabel('acceleration (g)')
+    plt.tight_layout()
     plt.savefig('{}/accel.png'.format(indir))
 
     # Plot raw gyro data
@@ -172,9 +172,9 @@ def analyse_mpu6050_data(indir):
     gyro_z_plot.set_title('gyro z')
     gyro_z_plot.plot(t, gyro_z_data, label='gyro_z')
 
-    plt.tight_layout()
     plt.xlabel('time (s)')
     plt.ylabel('angular speed (deg/s)')
+    plt.tight_layout()
     plt.savefig('{}/gyro.png'.format(indir))
 
     # Plot angles (no filtering)
@@ -212,9 +212,9 @@ def analyse_mpu6050_data(indir):
     heading_plot.set_title('heading')
     heading_plot.plot(t, heading_data, label='heading')
 
-    plt.tight_layout()
     plt.xlabel('time (s)')
     plt.ylabel('angle (deg)')
+    plt.tight_layout()
     plt.savefig('{}/angles.png'.format(indir))
 
 if len(sys.argv) != 2:
