@@ -25,22 +25,22 @@ def compute_pitch_roll_angles(t, accel_x_data, accel_y_data, accel_z_data,
     ax = (accel_x_data[0] + accel_x_data[1] + accel_x_data[2] + accel_x_data[3]) / 4.0
     ay = (accel_y_data[0] + accel_y_data[1] + accel_y_data[2] + accel_y_data[3]) / 4.0
     az = (accel_z_data[0] + accel_z_data[1] + accel_z_data[2] + accel_z_data[3]) / 4.0
-    pitch_data[0] = - math.atan2(ax, az) * 180.0 / math.pi
+    pitch_data[0] = math.atan2(ax, az) * 180.0 / math.pi
     roll_data[0] = math.atan2(ay, az) * 180.0 / math.pi
 
     for i in range(0, n):
         dt = t[i + 1] - t[i]
         pitch_data[i + 1] = pitch_data[i]
-        pitch_data[i + 1] += gyro_x_data[i] * dt
+        pitch_data[i + 1] -= gyro_y_data[i] * dt
 
         roll_data[i + 1] = roll_data[i]
-        roll_data[i + 1] += gyro_y_data[i] * dt
+        roll_data[i + 1] += gyro_x_data[i] * dt
 
-        roll_acc = math.atan2(accel_x_data[i], accel_z_data[i]) * 180.0 / math.pi
-        pitch_acc = math.atan2(accel_y_data[i], accel_z_data[i]) * 180.0 / math.pi
+        pitch_acc = math.atan2(accel_x_data[i], accel_z_data[i]) * 180.0 / math.pi
+        roll_acc = math.atan2(accel_y_data[i], accel_z_data[i]) * 180.0 / math.pi
 
-        pitch_data[i + 1] = alpha * pitch_data[i + 1] - (1.0 - alpha) * roll_acc
-        roll_data[i + 1] = alpha * roll_data[i + 1] + (1.0 - alpha) * pitch_acc
+        pitch_data[i + 1] = alpha * pitch_data[i + 1] + (1.0 - alpha) * pitch_acc
+        roll_data[i + 1] = alpha * roll_data[i + 1] + (1.0 - alpha) * roll_acc
 
     return (pitch_data, roll_data)
 
