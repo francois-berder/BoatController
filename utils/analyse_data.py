@@ -177,7 +177,7 @@ def analyse_mpu6050_data(indir):
     plt.tight_layout()
     plt.savefig('{}/gyro.png'.format(indir))
 
-    # Plot angles (no filtering)
+    # Plot angles
     t.insert(0, t[0])
     (pitch_gyro_data, roll_gyro_data) = \
         compute_pitch_roll_angles(t, accel_x_data, accel_y_data, accel_z_data,
@@ -216,6 +216,57 @@ def analyse_mpu6050_data(indir):
     plt.ylabel('angle (deg)')
     plt.tight_layout()
     plt.savefig('{}/angles.png'.format(indir))
+
+    # Plot speed
+    plt.figure(4)
+    speed_x_data = [0.0] * (n + 1)
+    speed_y_data = [0.0] * (n + 1)
+    speed_z_data = [0.0] * (n + 1)
+    accel_x_data.insert(0, 0.0)
+    accel_y_data.insert(0, 0.0)
+    accel_z_data.insert(0, 0.0)
+
+    avg_speed_x_data = [0.0] * (n + 1)
+    avg_speed_y_data = [0.0] * (n + 1)
+    avg_speed_z_data = [0.0] * (n + 1)
+
+    for i in range(0, n):
+        dt = t[i + 1] - t[i]
+        speed_x_data[i + 1] = speed_x_data[i] + (accel_x_data[i + 1] - accel_x_data[i]) * dt
+        speed_y_data[i + 1] = speed_y_data[i] + (accel_y_data[i + 1] - accel_y_data[i]) * dt
+        speed_z_data[i + 1] = speed_z_data[i] + (accel_z_data[i + 1] - accel_z_data[i]) * dt
+
+    # Moving average filter
+    avg_speed_x_data[0] = (speed_x_data[1] + speed_x_data[0]) / 2.0
+    avg_speed_y_data[0] = (speed_y_data[1] + speed_y_data[0]) / 2.0
+    avg_speed_z_data[0] = (speed_z_data[1] + speed_z_data[0]) / 2.0
+    for i in range(1, n):
+        avg_speed_x_data[i] = (speed_x_data[i + 1] + speed_x_data[i] + speed_x_data[i - 1]) / 3.0
+        avg_speed_y_data[i] = (speed_y_data[i + 1] + speed_y_data[i] + speed_y_data[i - 1]) / 3.0
+        avg_speed_z_data[i] = (speed_z_data[i + 1] + speed_z_data[i] + speed_z_data[i - 1]) / 3.0
+    avg_speed_x_data[n] = (speed_x_data[n] + speed_x_data[n - 1]) / 2.0
+    avg_speed_y_data[n] = (speed_y_data[n] + speed_y_data[n - 1]) / 2.0
+    avg_speed_z_data[n] = (speed_z_data[n] + speed_z_data[n - 1]) / 2.0
+
+    speed_x_plot = plt.subplot(3, 1, 1)
+    speed_x_plot.set_title('speed x')
+    speed_x_plot.plot(t, speed_x_data, label='speed_x')
+    speed_x_plot.plot(t, avg_speed_x_data, label='avg_speed_x')
+
+    speed_y_plot = plt.subplot(3, 1, 2)
+    speed_y_plot.set_title('speed y')
+    speed_y_plot.plot(t, speed_y_data, label='speed_y')
+    speed_y_plot.plot(t, avg_speed_y_data, label='speed_y')
+
+    speed_z_plot = plt.subplot(3, 1, 3)
+    speed_z_plot.set_title('speed z')
+    speed_z_plot.plot(t, speed_z_data, label='speed_z')
+    speed_z_plot.plot(t, avg_speed_z_data, label='speed_z')
+
+    plt.xlabel('time (s)')
+    plt.ylabel('speed (m/s)')
+    plt.tight_layout()
+    plt.savefig('{}/speed.png'.format(indir))
 
 if len(sys.argv) != 2:
     print("Wrong number of arguments.")
