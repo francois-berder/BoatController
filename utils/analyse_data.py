@@ -190,10 +190,10 @@ def analyse_mpu6050_data(indir):
                                   gyro_x_data, gyro_y_data, 0.98)
 
     n = len(gyro_x_data)
-    heading_data = [0.0] * (n + 1)
+    heading_gyro_data = [0.0] * (n + 1)
     for i in range(0, n):
         dt = t[i + 1] - t[i]
-        heading_data[i + 1] = heading_data[i] + gyro_z_data[i] * dt
+        heading_gyro_data[i + 1] = heading_gyro_data[i] - gyro_z_data[i] * dt
 
     plt.figure(3)
     roll_plot = plt.subplot(3, 1, 1)
@@ -210,7 +210,7 @@ def analyse_mpu6050_data(indir):
 
     heading_plot = plt.subplot(3, 1, 3)
     heading_plot.set_title('heading')
-    heading_plot.plot(t, heading_data, label='heading')
+    heading_plot.plot(t, heading_gyro_data, label='heading (gyro)')
 
     plt.xlabel('time (s)')
     plt.ylabel('angle (deg)')
