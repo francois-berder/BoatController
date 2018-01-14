@@ -143,14 +143,17 @@ def analyse_mpu6050_data(indir):
     plt.figure(1)
     accel_x_plot = plt.subplot(3, 1, 1)
     accel_x_plot.set_title('accel x')
+    accel_x_plot.set_ylim([-1.2, 1.2])
     accel_x_plot.plot(t, accel_x_data, label='accel_x')
 
     accel_y_plot = plt.subplot(3, 1, 2)
     accel_y_plot.set_title('accel y')
+    accel_y_plot.set_ylim([-1.2, 1.2])
     accel_y_plot.plot(t, accel_y_data, label='accel_y')
 
     accel_z_plot = plt.subplot(3, 1, 3)
     accel_z_plot.set_title('accel z')
+    accel_z_plot.set_ylim([-1.2, 1.2])
     accel_z_plot.plot(t, accel_z_data, label='accel_z')
 
     plt.xlabel('time (s)')
@@ -162,14 +165,17 @@ def analyse_mpu6050_data(indir):
     plt.figure(2)
     gyro_x_plot = plt.subplot(3, 1, 1)
     gyro_x_plot.set_title('gyro x')
+    gyro_x_plot.set_ylim([-40, 40])
     gyro_x_plot.plot(t, gyro_x_data, label='gyro_x')
 
     gyro_y_plot = plt.subplot(3, 1, 2)
     gyro_y_plot.set_title('gyro y')
+    gyro_y_plot.set_ylim([-40, 40])
     gyro_y_plot.plot(t, gyro_y_data, label='gyro_y')
 
     gyro_z_plot = plt.subplot(3, 1, 3)
     gyro_z_plot.set_title('gyro z')
+    gyro_z_plot.set_ylim([-40, 40])
     gyro_z_plot.plot(t, gyro_z_data, label='gyro_z')
 
     plt.xlabel('time (s)')
