@@ -217,51 +217,75 @@ def analyse_mpu6050_data(indir):
     plt.tight_layout()
     plt.savefig('{}/angles.png'.format(indir))
 
+    # Remove gravity vector from acceleration data
+    accel_x_data_2 = [0.0] * n
+    accel_y_data_2 = [0.0] * n
+    accel_z_data_2 = [0.0] * n
+    for i in range(0, n):
+        gravity_x = 0.0
+        gravity_y = 0.0
+        gravity_z = -1.0
+
+        # Rotate gravity vector using pitch and roll
+        r = roll_filtered_data[i + 1] * math.pi / 180.0
+        p = pitch_filtered_data[i + 1] * math.pi / 180.0
+
+        gy = gravity_y
+        gz = gravity_z
+        gravity_y = gy * math.cos(r) - gz * math.sin(r)
+        gravity_z = gy * math.sin(r) + gz * math.cos(r)
+
+        gx = gravity_x
+        gz = gravity_z
+        gravity_x = gx * math.cos(p) + gz * math.sin(p)
+        gravity_z = - gx * math.sin(p) + gz * math.cos(p)
+
+        l = gravity_x * gravity_x + gravity_y * gravity_y + gravity_z * gravity_z
+        l = math.sqrt(l)
+        gravity_x /= l
+        gravity_y /= l
+        gravity_z /= l
+
+        accel_x_data_2[i] = accel_x_data[i] + gravity_x
+        accel_y_data_2[i] = accel_y_data[i] + gravity_y
+        accel_z_data_2[i] = accel_z_data[i] + gravity_z
+
     # Plot speed
     plt.figure(4)
+    speed_data = [0.0] * (n + 1)
     speed_x_data = [0.0] * (n + 1)
     speed_y_data = [0.0] * (n + 1)
     speed_z_data = [0.0] * (n + 1)
-    accel_x_data.insert(0, 0.0)
-    accel_y_data.insert(0, 0.0)
-    accel_z_data.insert(0, 0.0)
-
     avg_speed_x_data = [0.0] * (n + 1)
     avg_speed_y_data = [0.0] * (n + 1)
     avg_speed_z_data = [0.0] * (n + 1)
 
     for i in range(0, n):
         dt = t[i + 1] - t[i]
-        speed_x_data[i + 1] = speed_x_data[i] + (accel_x_data[i + 1] - accel_x_data[i]) * dt
-        speed_y_data[i + 1] = speed_y_data[i] + (accel_y_data[i + 1] - accel_y_data[i]) * dt
-        speed_z_data[i + 1] = speed_z_data[i] + (accel_z_data[i + 1] - accel_z_data[i]) * dt
+        speed_x_data[i + 1] = speed_x_data[i] + accel_x_data_2[i] * dt
+        speed_y_data[i + 1] = speed_y_data[i] + accel_y_data_2[i] * dt
+        speed_z_data[i + 1] = speed_z_data[i] + accel_z_data_2[i] * dt
 
-    # Moving average filter
-    avg_speed_x_data[0] = (speed_x_data[1] + speed_x_data[0]) / 2.0
-    avg_speed_y_data[0] = (speed_y_data[1] + speed_y_data[0]) / 2.0
-    avg_speed_z_data[0] = (speed_z_data[1] + speed_z_data[0]) / 2.0
-    for i in range(1, n):
-        avg_speed_x_data[i] = (speed_x_data[i + 1] + speed_x_data[i] + speed_x_data[i - 1]) / 3.0
-        avg_speed_y_data[i] = (speed_y_data[i + 1] + speed_y_data[i] + speed_y_data[i - 1]) / 3.0
-        avg_speed_z_data[i] = (speed_z_data[i + 1] + speed_z_data[i] + speed_z_data[i - 1]) / 3.0
-    avg_speed_x_data[n] = (speed_x_data[n] + speed_x_data[n - 1]) / 2.0
-    avg_speed_y_data[n] = (speed_y_data[n] + speed_y_data[n - 1]) / 2.0
-    avg_speed_z_data[n] = (speed_z_data[n] + speed_z_data[n - 1]) / 2.0
+        speed_data[i + 1] = speed_x_data[i + 1] * speed_x_data[i + 1] \
+                          + speed_y_data[i + 1] * speed_y_data[i + 1] \
+                          + speed_z_data[i + 1] * speed_z_data[i + 1]
+        speed_data[i + 1] = math.sqrt(speed_data[i + 1])
 
-    speed_x_plot = plt.subplot(3, 1, 1)
+    speed_x_plot = plt.subplot(4, 1, 1)
     speed_x_plot.set_title('speed x')
     speed_x_plot.plot(t, speed_x_data, label='speed_x')
-    speed_x_plot.plot(t, avg_speed_x_data, label='avg_speed_x')
 
-    speed_y_plot = plt.subplot(3, 1, 2)
+    speed_y_plot = plt.subplot(4, 1, 2)
     speed_y_plot.set_title('speed y')
     speed_y_plot.plot(t, speed_y_data, label='speed_y')
-    speed_y_plot.plot(t, avg_speed_y_data, label='speed_y')
 
-    speed_z_plot = plt.subplot(3, 1, 3)
+    speed_z_plot = plt.subplot(4, 1, 3)
     speed_z_plot.set_title('speed z')
     speed_z_plot.plot(t, speed_z_data, label='speed_z')
-    speed_z_plot.plot(t, avg_speed_z_data, label='speed_z')
+
+    speed_plot = plt.subplot(4, 1, 4)
+    speed_plot.set_title('speed')
+    speed_plot.plot(t, speed_data, label='speed')
 
     plt.xlabel('time (s)')
     plt.ylabel('speed (m/s)')
