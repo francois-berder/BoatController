@@ -230,7 +230,7 @@ def analyse_mpu6050_data(indir):
     for i in range(0, n):
         gravity_x = 0.0
         gravity_y = 0.0
-        gravity_z = -1.0
+        gravity_z = 1.0
 
         # Rotate gravity vector using pitch and roll
         r = roll_filtered_data[i + 1] * math.pi / 180.0
@@ -246,15 +246,9 @@ def analyse_mpu6050_data(indir):
         gravity_x = gx * math.cos(p) + gz * math.sin(p)
         gravity_z = - gx * math.sin(p) + gz * math.cos(p)
 
-        l = gravity_x * gravity_x + gravity_y * gravity_y + gravity_z * gravity_z
-        l = math.sqrt(l)
-        gravity_x /= l
-        gravity_y /= l
-        gravity_z /= l
-
-        accel_x_data_2[i] = accel_x_data[i] + gravity_x
-        accel_y_data_2[i] = accel_y_data[i] + gravity_y
-        accel_z_data_2[i] = accel_z_data[i] + gravity_z
+        accel_x_data_2[i] = accel_x_data[i] - gravity_x
+        accel_y_data_2[i] = accel_y_data[i] - gravity_y
+        accel_z_data_2[i] = accel_z_data[i] - gravity_z
 
     # Plot speed
     plt.figure(4)
