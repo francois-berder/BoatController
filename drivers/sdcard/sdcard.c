@@ -300,7 +300,7 @@ int sdcard_write_block(struct sdcard_spi_dev_t *dev, const void *block, uint32_t
     /* Check response from SD card */
     {
         uint8_t data_response;
-        spi_transfer(SPI_1, NULL, &data_response, 1);
+        spi_transfer(dev->spi_num, NULL, &data_response, 1);
         if ((data_response & 0x1F) != DATA_ACCEPTED) {
             ret = -1;
             goto sdcard_write_block_end;
