@@ -258,7 +258,7 @@ int sdcard_read_block(struct sdcard_spi_dev_t *dev, void *block, uint32_t sector
 
 sdcard_read_block_end:
     gpio_write(dev->cs_pin, 1);
-    return 0;
+    return ret;
 }
 
 int sdcard_write_block(struct sdcard_spi_dev_t *dev, const void *block, uint32_t sector)
