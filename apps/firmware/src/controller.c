@@ -20,11 +20,10 @@
 #include <stdio.h>
 #include "controller.h"
 #include "core_timer.h"
-#include "fat16/fat16.h"
+#include "log.h"
 #include "mpu6050_fifo/mpu6050_fifo.h"
 #include "mcu.h"
 #include "output.h"
-#include "periph/crypto.h"
 #include "periph/spi.h"
 #include "periph_conf.h"
 #include "radio.h"
@@ -38,9 +37,6 @@
 
 struct board_config_t config;
 
-/* File descriptor */
-static int log_fd = -1;
-
 /*
  * Compute delta between radio direction frames
  * It is used to check if radio contact is good
@@ -51,68 +47,6 @@ static int16_t last_dir = NEUTRAL_POS;
 static int16_t angular_speed_target = NEUTRAL_POS;
 static int16_t speed_target = NEUTRAL_POS;
 
-static void open_log_file(void)
-{
-    char filepath[13];
-    unsigned int i;
-
-    /* Create filename: 8 random letters */
-    crypto_power_up();
-    crypto_enable();
-    crypto_get_random(filepath, 8);
-    crypto_disable();
-    crypto_power_down();
-    for (i = 0; i < 8; ++i)
-        filepath[i] = 'A' + (filepath[i] & 0xF);
-    filepath[8] = '.';
-    filepath[9] = 'T';
-    filepath[10] = 'X';
-    filepath[11] = 'T';
-    filepath[12] = '\0';
-
-    /* Open log file */
-    log_fd = fat16_open(filepath, 'w');
-    if (log_fd < 0)
-        printf("Cannot log I/O to file %s\n", filepath);
-    else
-        printf("Logging I/O to file %s\n", filepath);
-
-
-    /*
-     * Flush cache now to ensure that file will exist on the SD card
-     * even if no radio frames are found later.
-     */
-    sdcard_cache_flush();
-}
-
-static void log_radio_frame(struct radio_frame_t rf)
-{
-    char buffer[64];
-    int ret = sprintf(buffer, "%lu,0,%u,%u\n",
-                      rf.t, rf.dir, rf.speed);
-    if (ret >= 0)
-        fat16_write(log_fd, buffer, ret);
-}
-
-static void log_output_frame(uint32_t t, struct output_frame_t of)
-{
-    char buffer[128];
-    int ret = sprintf(buffer, "%lu,1,%u,%u,%u,%u\n",
-                      t, of.left_rudder, of.right_rudder, of.left_motor, of.right_motor);
-    if (ret >= 0)
-        fat16_write(log_fd, buffer, ret);
-}
-
-static void log_mpu6050_frame(struct mpu6050_sample_t s)
-{
-    char buffer[128];
-    int ret = sprintf(buffer, "%lu,2,%d,%d,%d,%d,%d,%d\n",
-                      s.t,
-                      s.accel.x, s.accel.y, s.accel.z,
-                      s.gyro.x, s.gyro.y, s.gyro.z);
-    if (ret >= 0)
-        fat16_write(log_fd, buffer, ret);
-}
 
 void controller_init(struct board_config_t _config)
 {
@@ -125,7 +59,7 @@ void controller_init(struct board_config_t _config)
     radio_enable();
 
     if (config.sdcard_enabled)
-        open_log_file();
+        log_init();
 
     if (config.mpu6050_enabled) {
         mpu6050_fifo_init(config.mpu6050_dev, 1, 1);
@@ -147,12 +81,11 @@ void controller_run(void)
         }
 
         /* Check if the SD card is working correctly */
-        if (config.sdcard_enabled) {
+        if (config.sdcard_enabled && log_is_running()) {
             struct sdcard_cache_stats_t stats = sdcard_cache_get_stats();
             if (stats.write_error || stats.read_error) {
-                fat16_close(log_fd);
 
-                log_fd = -1;
+                log_stop();
 
                 /* Disable SPI module since we won't use it anymore */
                 spi_disable(config.sdcard_dev.spi_num);
@@ -209,8 +142,7 @@ void controller_run(void)
                     speed_target -= NEUTRAL_POS;
                 }
 
-                if (log_fd >= 0)
-                    log_radio_frame(frame);
+                log_radio_frame(frame);
             }
         }
 
@@ -218,8 +150,7 @@ void controller_run(void)
         if (config.mpu6050_enabled) {
             struct mpu6050_sample_t s;
             while (mpu6050_fifo_get_sample(&s) == 1) {
-                if (log_fd >= 0)
-                    log_mpu6050_frame(s);
+                log_mpu6050_frame(s);
             }
         }
 
@@ -232,15 +163,12 @@ void controller_run(void)
             output_frame.right_motor = speed_target + NEUTRAL_POS;
             output_set_frame(output_frame);
 
-            if (log_fd >= 0)
-                log_output_frame(t, output_frame);
+            log_output_frame(t, output_frame);
         }
 
         /* Ensure that logs are periodically saved to SD card */
-        if (log_fd >= 0) {
-            if (counter == 0)
-                sdcard_cache_flush();
-        }
+        if (counter == 0)
+            log_flush();
 
         mcu_delay(CONTROLLER_PERIOD_MS);
 

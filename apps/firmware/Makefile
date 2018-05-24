@@ -1,5 +1,6 @@
 APP=firmware
 APP_SRCS = src/controller.c \
+           src/log.c \
            src/main.c \
            src/output.c \
            src/radio.c \
