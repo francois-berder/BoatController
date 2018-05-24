@@ -35,7 +35,7 @@
 
 #define NEUTRAL_POS     (6000)
 
-struct board_config_t config;
+static struct board_config_t config;
 
 /*
  * Compute delta between radio direction frames
