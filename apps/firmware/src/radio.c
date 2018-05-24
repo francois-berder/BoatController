@@ -32,7 +32,9 @@
 #define SPEED_RECEIVED_FLAG     (2)
 #define ALL_RECEIVED_FLAG       (DIR_RECEIVED_FLAG | SPEED_RECEIVED_FLAG)
 
-static volatile struct radio_frame_t frames[4];
+#define RADIO_FIFO_LEN          (4) /* must be a power of 2 */
+
+static volatile struct radio_frame_t frames[RADIO_FIFO_LEN];
 static volatile unsigned int available_frame;
 static volatile unsigned int current_frame;
 static volatile uint8_t flags;
@@ -42,7 +44,7 @@ static volatile uint16_t speed_buf_prev;
 
 static void push_frame(void)
 {
-    unsigned int tmp = (current_frame + 1) & 0x3;
+    unsigned int tmp = (current_frame + 1) & (RADIO_FIFO_LEN - 1);
 
     /* If we have a buffer overflow, drop this frame */
     if (tmp != available_frame) {
@@ -133,7 +135,7 @@ int radio_get_frame(struct radio_frame_t *frame)
     mcu_disable_interrupts();
     if (available_frame != current_frame) {
         *frame = frames[index];
-        available_frame = (available_frame + 1) & 0x3;
+        available_frame = (available_frame + 1) & (RADIO_FIFO_LEN - 1);
         ret = 1;
     }
     mcu_enable_interrupts();
