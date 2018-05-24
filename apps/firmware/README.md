@@ -9,25 +9,26 @@ SD card and mpu6050 are optional. The controller will still perform as best as i
 
 ### SD card
 
-SD and SDHC cards are supported. The SD card must be contain at least one valid FAT16 partition in the master boot record.
-The controller will create a directory, whose name is random. In this directory, three files are created: ```RADIO.TXT```, ```OUTPUT.TXT``` and ```MPU6050.TXT```.
+SD and SDHC cards are supported, but the code has only been tested with 2GB SD cards. The SD card must be contain at least one valid FAT16 partition in the master boot record.
 
-In ```RADIO.TXT```, the controller saves all radio frames using the following format(all entries are unsigned 16-bit integers except the first one):
-```
-ticks, radio_dir, radio_speed
-```
+The controller used to create a random directory and log everything in three different files: `RADIO.TXT`, `OUTPUT.TXT` and `MPU6050.TXT`.
+However, it appeared that the sdcard cache could not cope well with reading and writing to many different blocks. So the controller now creates a single file in the root directory. Its name is random.
 
-In ```OUTPUT.TXT```, the controller saves all output frames using the following format  (all entries are unsigned 16-bit integers except the first one):
+This file contains three types of data (indicated by second element):
 ```
-ticks, left_rudder, right_rudder, left_motor, right_motor
-```
-
-In ```MPU6050.TXT```, the controller saves all samples from the MPU6050 using the following format (all entries are signed 16-bit integers except the first one):
-```
-ticks, accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z
+ticks, 0, radio_dir, radio_speed
+ticks, 1, left_rudder, right_rudder, left_motor, right_motor
+ticks, 2, accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z
 ```
 
-ticks is a unsigned 32-bit integer when indicates when the frame was created. It has a resolution of 1 ms.
+`ticks` is a unsigned 32-bit integer when indicates when the frame was created. It has a resolution of 1 ms.
+
+`radio_dir, radio_speed` are unsigned 16-bit integers.
+
+`left_rudder, right_rudder, left_motor, right_motor` are unsigned 16-bit integers.
+
+`accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z` are signed 16-bit integers.
+
 The controller flushes all blocks to the SD card every 2 seconds such that not much data is lost when the board is powered off.
 
 ### MPU6050 accel/gyro
