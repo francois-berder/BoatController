@@ -27,6 +27,7 @@
 #include "periph/spi.h"
 #include "periph_conf.h"
 #include "radio.h"
+#include "radio_filter.h"
 #include "sdcard_cache/sdcard_cache.h"
 
 #ifndef CONTROLLER_PERIOD_MS
@@ -36,17 +37,27 @@
 #define NEUTRAL_POS     (6000)
 
 static struct board_config_t config;
+static struct radio_frame_t last_radio_frame;
 
-/*
- * Compute delta between radio direction frames
- * It is used to check if radio contact is good
- */
-static int16_t delta_radio_buffer[16];
-static int16_t last_dir = NEUTRAL_POS;
+void radio_contact_status_callback(bool lost)
+{
+    /* Let's stop the boat if we lost radio contact */
+    if (lost) {
+        struct output_frame_t output_frame;
+        uint32_t t = core_timer_get_ticks();
 
-static int16_t angular_speed_target = NEUTRAL_POS;
-static int16_t speed_target = NEUTRAL_POS;
+        last_radio_frame.dir = NEUTRAL_POS;
+        last_radio_frame.speed = NEUTRAL_POS;
 
+        output_frame.left_rudder = last_radio_frame.dir;
+        output_frame.right_rudder = last_radio_frame.dir;
+        output_frame.left_motor = last_radio_frame.speed;
+        output_frame.right_motor = last_radio_frame.speed;
+
+        output_set_frame(output_frame);
+        log_output_frame(t, output_frame);
+    }
+}
 
 void controller_init(struct board_config_t _config)
 {
@@ -98,51 +109,12 @@ void controller_run(void)
 
         /* Process all frames available from the radio */
         {
-            struct radio_frame_t frame;
-            while (radio_get_frame(&frame)) {
-                unsigned int i;
-                unsigned int bad_delta_count = 0;
-
-                update_output_frame = 1;
-
-
-                /* Ignore the 2 least significant bits */
-                frame.dir &= ~0x3;
-                frame.speed &= ~0x3;
-
-                /* Add to buffer */
-                for (i = 15; i > 0; --i)
-                    delta_radio_buffer[i] = delta_radio_buffer[i - 1];
-                delta_radio_buffer[0] = ((int16_t)frame.dir) - last_dir;
-                last_dir = frame.dir;
-
-                /* Find out if radio contact is loss */
-                for (i = 0; i < 16; ++i) {
-                    if (delta_radio_buffer[i] > 1000 || delta_radio_buffer[i] < -1000)
-                        ++bad_delta_count;
+            struct radio_frame_t input_frame;
+            while (radio_get_frame(&input_frame)) {
+                if (radio_filter(&last_radio_frame, &input_frame)) {
+                    update_output_frame = 1;
+                    log_radio_frame(input_frame);
                 }
-
-                /* If we lost radio contact, let's stop the boat */
-                if (bad_delta_count >= 6) {
-                    angular_speed_target = 0;
-                    speed_target = 0;
-                    continue;
-                }
-
-                /* IIR filter */
-                if (frame.dir >= 3800 && frame.dir <= 8200) {
-                    angular_speed_target += NEUTRAL_POS;
-                    angular_speed_target = (angular_speed_target + frame.dir) >> 1;
-                    angular_speed_target -= NEUTRAL_POS;
-                }
-
-                if (frame.speed >= 3800 && frame.speed <= 8200) {
-                    speed_target += NEUTRAL_POS;
-                    speed_target = (speed_target + frame.speed) >> 1;
-                    speed_target -= NEUTRAL_POS;
-                }
-
-                log_radio_frame(frame);
             }
         }
 
@@ -157,12 +129,11 @@ void controller_run(void)
         if (update_output_frame) {
             struct output_frame_t output_frame;
             uint32_t t = core_timer_get_ticks();
-            output_frame.left_rudder = angular_speed_target + NEUTRAL_POS;
-            output_frame.right_rudder = angular_speed_target + NEUTRAL_POS;
-            output_frame.left_motor = speed_target + NEUTRAL_POS;
-            output_frame.right_motor = speed_target + NEUTRAL_POS;
+            output_frame.left_rudder = last_radio_frame.dir;
+            output_frame.right_rudder = last_radio_frame.dir;
+            output_frame.left_motor = last_radio_frame.speed;
+            output_frame.right_motor = last_radio_frame.speed;
             output_set_frame(output_frame);
-
             log_output_frame(t, output_frame);
         }
 

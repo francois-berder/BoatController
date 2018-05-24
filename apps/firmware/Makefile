@@ -4,6 +4,7 @@ APP_SRCS = src/controller.c \
            src/main.c \
            src/output.c \
            src/radio.c \
+           src/radio_filter.c \
            src/status.c
 
 # Disable debug print from fat16 driver
