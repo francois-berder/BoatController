@@ -81,8 +81,10 @@ void log_flush(void)
 
 void log_stop(void)
 {
-    fat16_close(fd);
-    fd = -1;
+    if (fd >= 0) {
+        fat16_close(fd);
+        fd = -1;
+    }
 }
 
 int log_is_running(void)
