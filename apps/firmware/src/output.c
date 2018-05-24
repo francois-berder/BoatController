@@ -17,6 +17,7 @@
  * along with pic24-framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
 #include "mcu.h"
 #include "output.h"
 #include "periph/gpio.h"
@@ -24,11 +25,6 @@
 #include "periph_conf.h"
 
 #define NEUTRAL_POS     (6000)
-
-#define LEFT_RUDDER_PIN         (GPIO_PIN(PORT_B, 2))
-#define RIGHT_RUDDER_PIN        (GPIO_PIN(PORT_B, 3))
-#define LEFT_MOTOR_PIN          (GPIO_PIN(PORT_A, 2))
-#define RIGHT_MOTOR_PIN         (GPIO_PIN(PORT_A, 3))
 
 enum OUTPUT_STATE {
     START_COMMAND_SERVO,
@@ -112,11 +108,6 @@ void output_configure(void)
     timer_stop(TIMER_4);
     timer_power_up(TIMER_3);
     timer_power_up(TIMER_4);
-
-    gpio_init_out(LEFT_RUDDER_PIN, 0);
-    gpio_init_out(RIGHT_RUDDER_PIN, 0);
-    gpio_init_out(LEFT_MOTOR_PIN, 0);
-    gpio_init_out(RIGHT_MOTOR_PIN, 0);
 
     current_frame.left_rudder = NEUTRAL_POS;
     current_frame.right_rudder = NEUTRAL_POS;

@@ -80,22 +80,6 @@
 #include "sdcard_cache/sdcard_cache.h"
 #include "status.h"
 
-/* Pin for status LED */
-#define LED_PIN         (GPIO_PIN(PORT_B, 5))
-
-/* Pins for UART interface */
-#define UART_TX_PIN     (GPIO_PIN(PORT_B, 15))
-#define UART_RX_PIN     (GPIO_PIN(PORT_B, 14))
-
-/* Pins for MPU6050 */
-#define I2C_SCL_PIN     (GPIO_PIN(PORT_B, 8))
-#define I2C_SDA_PIN     (GPIO_PIN(PORT_B, 9))
-
-/* Pins for SD card */
-#define MOSI_PIN        (GPIO_PIN(PORT_B, 13))
-#define MISO_PIN        (GPIO_PIN(PORT_B, 4))
-#define SCK_PIN         (GPIO_PIN(PORT_B, 6))
-#define CS_PIN          (GPIO_PIN(PORT_B, 7))
 
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "dev"
@@ -155,6 +139,17 @@ static void configure_gpios(void)
     RPOR6bits.RP13R = 0x0007;       /* SPI1 - MOSI */
     RPINR20bits.SDI1R = 0x0004;     /* SPI1 - MISO */
     RPOR3bits.RP6R = 0x0008;        /* SPI1 - SCK */
+
+    /* IC1 and IC2 */
+    gpio_init_in(RADIO_DIR_PIN);
+    gpio_init_in(RADIO_SPEED_PIN);
+    RPINR7 = 0x0100;
+
+    /* Output pins */
+    gpio_init_out(LEFT_RUDDER_PIN, 0);
+    gpio_init_out(RIGHT_RUDDER_PIN, 0);
+    gpio_init_out(LEFT_MOTOR_PIN, 0);
+    gpio_init_out(RIGHT_MOTOR_PIN, 0);
 }
 
 /**

@@ -20,13 +20,9 @@
 #include <xc.h>
 #include "core_timer.h"
 #include "mcu.h"
-#include "periph/gpio.h"
 #include "periph/ic.h"
 #include "periph_conf.h"
 #include "radio.h"
-
-#define RADIO_DIR_PIN       (GPIO_PIN(PORT_B, 0))
-#define RADIO_SPEED_PIN     (GPIO_PIN(PORT_B, 1))
 
 #define DIR_RECEIVED_FLAG       (1)
 #define SPEED_RECEIVED_FLAG     (2)
@@ -87,10 +83,6 @@ void ic2_callback(void)
 
 void radio_configure(void)
 {
-    gpio_init_in(RADIO_DIR_PIN);
-    gpio_init_in(RADIO_SPEED_PIN);
-    RPINR7 = 0x0100;
-
     ic_power_up(IC_1);
     ic_power_up(IC_2);
     ic_configure(IC_1, IC_EDGE_DETECT, 1);
