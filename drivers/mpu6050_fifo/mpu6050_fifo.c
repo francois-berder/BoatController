@@ -107,19 +107,22 @@ int mpu6050_fifo_is_running(void)
 
 void mpu6050_fifo_clear_samples(void)
 {
-    mcu_disable_interrupts();
+    unsigned int ctx;
+
+    ctx = mcu_save_context();
     fifo_start_index = 0;
     sample_count = 0;
-    mcu_enable_interrupts();
+    mcu_restore_context(ctx);
 }
 
 unsigned int mpu6050_fifo_get_sample_count(void)
 {
     unsigned int tmp;
+    unsigned int ctx;
 
-    mcu_disable_interrupts();
+    ctx = mcu_save_context();
     tmp = sample_count;
-    mcu_enable_interrupts();
+    mcu_restore_context(ctx);
 
     return tmp;
 }
@@ -127,8 +130,9 @@ unsigned int mpu6050_fifo_get_sample_count(void)
 int mpu6050_fifo_get_sample(struct mpu6050_sample_t *sample)
 {
     int ret = 0;
+    unsigned int ctx;
 
-    mcu_disable_interrupts();
+    ctx = mcu_save_context();
     if (sample_count > 0) {
         *sample = samples[fifo_start_index];
         ++fifo_start_index;
@@ -136,7 +140,7 @@ int mpu6050_fifo_get_sample(struct mpu6050_sample_t *sample)
         --sample_count;
         ret = 1;
     }
-    mcu_enable_interrupts();
+    mcu_restore_context(ctx);
 
     return ret;
 }
