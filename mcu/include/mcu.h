@@ -66,6 +66,16 @@ void mcu_enable_interrupts(void);
 void mcu_disable_interrupts(void);
 
 /**
+ * @brief Disable interrupt and return interrupt context
+ */
+unsigned int mcu_save_context(void);
+
+/**
+ * @brief Restore interrupt context
+ */
+void mcu_restore_context(unsigned int ctx);
+
+/**
  * @return ID of the MCU
  */
 uint16_t mcu_get_id(void);
