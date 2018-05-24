@@ -71,6 +71,18 @@ void mcu_disable_interrupts(void)
     SET_CPU_IPL(7);
 }
 
+unsigned int mcu_save_context(void)
+{
+    unsigned int ctx;
+    SET_AND_SAVE_CPU_IPL(ctx, 7);
+    return ctx;
+}
+
+void mcu_restore_context(unsigned int ctx)
+{
+    RESTORE_CPU_IPL(ctx);
+}
+
 uint16_t mcu_get_id(void)
 {
     volatile uint16_t *devid = (volatile uint16_t *)0xFF0000;
