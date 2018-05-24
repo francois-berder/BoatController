@@ -155,7 +155,7 @@ void output_disable(void)
 
 void output_set_frame(struct output_frame_t frame)
 {
-    mcu_disable_interrupts();
+    unsigned int ctx = mcu_save_context();
     next_frame = frame;
-    mcu_enable_interrupts();
+    mcu_restore_context(ctx);
 }

@@ -119,10 +119,11 @@ void radio_disable(void)
 uint8_t radio_has_frame(void)
 {
     unsigned int tmp;
+    unsigned int ctx;
 
-    mcu_disable_interrupts();
+    ctx = mcu_save_context();
     tmp = current_frame;
-    mcu_enable_interrupts();
+    mcu_restore_context(ctx);
 
     return tmp != available_frame;
 }
@@ -131,14 +132,15 @@ int radio_get_frame(struct radio_frame_t *frame)
 {
     unsigned int index = available_frame;
     int ret = 0;
+    unsigned int ctx;
 
-    mcu_disable_interrupts();
+    ctx = mcu_save_context();
     if (available_frame != current_frame) {
         *frame = frames[index];
         available_frame = (available_frame + 1) & (RADIO_FIFO_LEN - 1);
         ret = 1;
     }
-    mcu_enable_interrupts();
+    mcu_restore_context(ctx);
 
     return ret;
 }
