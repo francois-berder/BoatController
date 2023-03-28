@@ -9,6 +9,7 @@ Run analysis: ./analyse_samples.py <out>
 import csv
 import math
 import sys
+
 import matplotlib.pyplot as plt
 
 GYRO_SENSITIVITY = 65.5
